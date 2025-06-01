@@ -3,7 +3,6 @@ AS SELECT *
 FROM read_csv('/Users/macbook/Development/database_crash_test/data/no_headers_brandenburger_gate_seriescalc.csv');
 
 
-
 -- error queries wih mysql
 ['-- The INTERVAL creates an error in mysql
 -- WINDOW FUNCTION Queries
