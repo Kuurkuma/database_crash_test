@@ -118,3 +118,96 @@ FROM DailyMaxPower;
 SELECT CORR(P, temperature) FROM data; -- Replace temperature with your actual column name
 -- Notes: CORR() function availability varies (Postgres, DuckDB usually have it). MySQL might require calculation.
 
+---
+
+CREATE OR REPLACE TABLE data AS SELECT * 
+FROM read_csv('/Users/macbook/Development/database_crash_test/data/spotify_dataset.csv');
+
+select count(*) as total_rows
+from spotify_data as s;
+
+select
+    column_name,
+    data_type
+from INFORMATION_SCHEMA.columns
+where table_name = 'data';
+
+SELECT 
+    DISTINCT a1.REPLACE((' ','') as artist, Artist(s), ,'') as artist,Artist(s), 
+    COUNT(*) AS duplicate_count 
+FROM data a1 
+JOIN data a2 
+ON a1.artist = a2.artist 
+GROUP BY a1.artist;
+
+-- REMOVE ANY CHARACTERS & REPLACE SPACES WITH UNDERSCORES
+-- LOWERCASE EVERYTHING
+SELECT 
+    column_name,
+    data_type,
+    LOWER(REPLACE(column_name, ' ', '_')) AS transformed_column_name
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE table_name = 'data';
+
+-- CREATE TABLE STATEMENT FROM COLUMN INFO
+
+SELECT
+     CONCAT(
+        LOWER(REPLACE(REGEXP_REPLACE(column_name, '[^a-z0-9_]', ''), ' ', '_')),
+      ' ',
+      data_type
+    ORDER BY ordinal_position
+  ) AS create_table_columns
+FROM
+  INFORMATION_SCHEMA.COLUMNS
+WHERE table_name = 'data';
+
+
+CREATE OR REPLACE TABLE data AS
+SELECT
+  'Artist(s)' AS artists,                 
+  song AS song,                           -- Just lowercase
+  text AS text,
+  'Length' AS length,                 -- Just lowercase
+  emotion AS emotion,
+  Genre AS genre,
+  Album AS album,
+  'Release Date' AS release_date,               
+  Key AS key,
+  Tempo AS tempo,
+  'Loudness (db)' AS loudness_db,               
+  'Time signature' AS time_signature,                 
+  Explicit AS explicit,
+  Popularity AS popularity,
+  Energy AS energy,
+  Danceability AS danceability,
+  Positiveness AS positiveness,
+  Speechiness AS speechiness,
+  Liveness AS liveness,
+  Acousticness AS acousticness,
+  Instrumentalness AS instrumentalness,
+  'Good for Party' AS good_for_party,             -- 
+  'Good for Work/Study' AS good_for_work_study,               
+  'Good for Relaxation/Meditation' AS good_for_relaxation_meditation,  
+  'Good for Exercise' AS good_for_exercise,               
+  'Good for Running' AS good_for_running,                 
+  'Good for Yoga/Stretching' AS good_for_yoga_stretching,           
+  'Good for Driving' AS good_for_driving,               
+  'Good for Social Gatherings' AS good_for_social_gatherings,           
+  'Good for Morning Routine' AS good_for_morning_routine,             
+  'Similar Artist 1' AS similar_artist_1,             
+  'Similar Song 1' AS similar_song_1,               
+  'Similarity Score 1' AS similarity_score_1,             
+  'Similar Artist 2' AS similar_artist_2,
+  'Similar Song 2' AS similar_song_2,
+  'Similarity Score 2' AS similarity_score_2,
+  'Similar Artist 3' AS similar_artist_3,
+  'Similar Song 3' AS similar_song_3,
+  'Similarity Score 3' AS similarity_score_3
+FROM data;
+
+SELECT 
+    column_name,
+    data_type
+    FROM INFORMATION_SCHEMA.columns
+WHERE table_name = 'data';
