@@ -310,7 +310,7 @@ class Benchmarker(object):
 
             # Now load the data - pandas will respect the column types already defined
             chunk_size = 10000
-            for i in tqdm(range(0, len(self.data), chunk_size), inplace=True):
+            for i in tqdm(range(0, len(self.data), chunk_size)):
                 chunk = self.data.iloc[i:i + chunk_size]
                 try:
 
