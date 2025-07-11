@@ -11,7 +11,7 @@ def load_queries_split_by_semicolon(filepath):
         with open(filepath, 'r') as f:
             content = f.read()
         queries = [q.strip() for q in content.split(";") if q.strip()]
-        return queries
+        return queries[0:2]
     except FileNotFoundError:
         logger.error(f"SQL file not found: {filepath}")
         sys.exit(1)

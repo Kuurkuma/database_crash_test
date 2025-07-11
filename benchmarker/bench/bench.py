@@ -6,7 +6,7 @@ from sqlalchemy import create_engine, text, MetaData, Table, Column
 from sqlalchemy.dialects.mysql import LONGTEXT, INTEGER, FLOAT, BOOLEAN
 import kagglehub
 from kagglehub import KaggleDatasetAdapter
-from .databases import ClickHouseHandler, MySQLHandler
+from .databases import ClickHouseHandler, MySQLHandler, QueryMetrics
 from tqdm import tqdm
 
 logging.basicConfig(
@@ -167,25 +167,25 @@ class Benchmarker(object):
                     self._load_data_to_database(database_handler, conn)
 
                     # Run each query and collect metrics
-                    # for query in self.queries:
-                    #     logger.info(f"Running query: {query[:60]}...")
-                    #     try:
-                    #         result, metrics = database_handler.run_query_with_metrics(query)
-                    #         all_metrics.append(metrics.to_dict())
-                    #
-                    #         # Log some sample results
-                    #         if not result.empty:
-                    #             sample_size = min(5, len(result))
-                    #             logger.info(
-                    #                 f"Sample result ({len(result)} rows total):\n{result.head(sample_size)}"
-                    #             )
-                    #     except Exception as e:
-                    #         logger.error(f"Error running query '{query[:60]}...': {e}")
-                    #         # Create a failed metrics entry
-                    #         failed_metrics = QueryMetrics(query=query, original_query=query,
-                    #                                     database_type=database_handler.__class__.__name__)
-                    #         failed_metrics.failed = True
-                    #         all_metrics.append(failed_metrics.to_dict())
+                    for query in self.queries:
+                        logger.info(f"Running query: {query[:60]}...")
+                        try:
+                            result, metrics = database_handler.run_query_with_metrics(query)
+                            all_metrics.append(metrics.to_dict())
+
+                            # Log some sample results
+                            if not result.empty:
+                                sample_size = min(5, len(result))
+                                logger.info(
+                                    f"Sample result ({len(result)} rows total):\n{result.head(sample_size)}"
+                                )
+                        except Exception as e:
+                            logger.error(f"Error running query '{query[:60]}...': {e}")
+                            # Create a failed metrics entry
+                            failed_metrics = QueryMetrics(query=query, original_query=query,
+                                                        database_type=database_handler.__class__.__name__)
+                            failed_metrics.failed = True
+                            all_metrics.append(failed_metrics.to_dict())
 
             except Exception as e:
                 logger.error(f"Error benchmarking {database_name}: {e}")
@@ -212,18 +212,18 @@ class Benchmarker(object):
 
         type_mapping = {
             # Integer types
-            'int8': 'Int8',
-            'int16': 'Int16',
-            'int32': 'Int32',
-            'int64': 'Int64',
+            'Int8': 'Int8',
+            'Int16': 'Int16',
+            'Int32': 'Int32',
+            'Int64': 'Int64',
             'UInt8': 'UInt8',
             'UInt16': 'UInt16',
             'UInt32': 'UInt32',
             'UInt64': 'UInt64',
 
             # Floating point types
-            'float32': 'Float32',
-            'float64': 'Float64',
+            'Float32': 'Float32',
+            'Float64': 'Float64',
 
             # String types
             'object': 'String',
