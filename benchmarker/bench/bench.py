@@ -305,7 +305,7 @@ class Benchmarker(object):
             columns = [Column(col, dtype[col]) for col in self.data.columns]
             table = Table('data', metadata, *columns)
             metadata.create_all(conn.engine)
-
+            conn.commit()
             logger.info("Table created, now loading data")
 
             # Now load the data - pandas will respect the column types already defined
@@ -313,8 +313,7 @@ class Benchmarker(object):
             for i in tqdm(range(0, len(self.data), chunk_size)):
                 chunk = self.data.iloc[i:i + chunk_size]
                 try:
-
-                    conn.commit()
+                    chunk.to_sql(con=conn, name="data", if_exists="append", index=False)
                     logger.info(f"Loaded rows {i} to {min(i + chunk_size, len(self.data))}")
                 except:
                     logger.error(f"Error loading chunk {i} with content: {chunk}")
@@ -322,8 +321,7 @@ class Benchmarker(object):
                     for j in range(0, len(chunk), 50):
                         sub_chunk = chunk.iloc[j:j + sub_chunk_size]
                         try:
-                            chunk.to_sql(con=conn, name="data", if_exists="append", index=False)
-                            conn.commit()
+                            sub_chunk.to_sql(con=conn, name="data", if_exists="append", index=False)
                             logger.info(f"Loaded rows {i} to {min(i + chunk_size, len(self.data))}")
                         except:
                             logger.error(f"Error loading chunk {i} to sub_chunk {j} with content: {sub_chunk}")
