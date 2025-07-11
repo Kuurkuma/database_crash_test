@@ -27,7 +27,7 @@ if __name__ == "__main__":
         "mysql": MySQLHandler(name="test-mysql", port=3306, cpu_limit=2, memory_limit="4G", sql_dialect="mysql"),
         "postgres": PostgresHandler(name="test-postgres", port=6543, cpu_limit=2, sql_dialect="postgres"),
         "duckdb": DuckDBHandler(
-           name="test-duckdb", db_file="duckdb_data.db", cpu_limit=2, sql_dialect="duckdb"
+            name="test-duckdb", db_file="duckdb_data.db", cpu_limit=2, sql_dialect="duckdb"
         ),
         "clickhouse": ClickHouseHandler(
             name="test-clickhouse", http_port=8124, tcp_port=9001, cpu_limit=2, sql_dialect="clickhouse"
@@ -42,7 +42,7 @@ if __name__ == "__main__":
     #   )
     
     # Load local time series dataset
-    benchmarker.get_local_csv('../data/no_headers_brandenburger_gate_seriescalc.csv') # 
+    benchmarker.get_local_csv('../data/no_headers_brandenburger_gate_seriescalc.csv') #
  
     # Load the queries to be executed
     queries =load_queries_split_by_semicolon('../protocol_queries.sql')
