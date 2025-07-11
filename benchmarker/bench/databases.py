@@ -4,8 +4,7 @@ import docker
 from docker.models.containers import Container
 from typing import Optional, Dict, List, Any, Tuple
 import logging
-from sqlalchemy import create_engine, text
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import create_engine
 import pandas as pd
 import psutil
 import sqlglot

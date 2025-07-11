@@ -1,13 +1,12 @@
 import logging
 import sys
-from unittest.mock import inplace
 import re
 import pandas as pd
-from sqlalchemy import create_engine, text, MetaData, Table, Column, Integer
-from sqlalchemy.dialects.mysql import LONGTEXT, INTEGER, FLOAT, BOOLEAN, VARCHAR
+from sqlalchemy import create_engine, text, MetaData, Table, Column
+from sqlalchemy.dialects.mysql import LONGTEXT, INTEGER, FLOAT, BOOLEAN
 import kagglehub
 from kagglehub import KaggleDatasetAdapter
-from .databases import ClickHouseHandler, QueryMetrics, MySQLHandler, PostgresHandler, DuckDBHandler
+from .databases import ClickHouseHandler, MySQLHandler
 from tqdm import tqdm
 
 logging.basicConfig(
@@ -307,7 +306,7 @@ class Benchmarker(object):
             table = Table('data', metadata, *columns)
             metadata.create_all(conn.engine)
 
-            logger.info(f"Table created, now loading data")
+            logger.info("Table created, now loading data")
 
             # Now load the data - pandas will respect the column types already defined
             chunk_size = 10000
