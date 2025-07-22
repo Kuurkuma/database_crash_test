@@ -212,18 +212,18 @@ class Benchmarker(object):
 
         type_mapping = {
             # Integer types
-            'Int8': 'Int8',
-            'Int16': 'Int16',
-            'Int32': 'Int32',
-            'Int64': 'Int64',
+            'int8': 'Int8',
+            'int16': 'Int16',
+            'int32': 'Int32',
+            'int64': 'Int64',
             'UInt8': 'UInt8',
             'UInt16': 'UInt16',
             'UInt32': 'UInt32',
             'UInt64': 'UInt64',
 
             # Floating point types
-            'Float32': 'Float32',
-            'Float64': 'Float64',
+            'float32': 'Float32',
+            'float64': 'Float64',
 
             # String types
             'object': 'String',

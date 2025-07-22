@@ -32,8 +32,8 @@ if __name__ == "__main__":
 
 
     scenarios_test = {
-        "cpu": [2],
-        "mem": ["2G"],
+        "cpu": [20],
+        "mem": ["64G"],
     }
     scenarios_full = {
         "cpu": [2, 4, 6,  8, 10, 14, 18],
@@ -44,14 +44,14 @@ if __name__ == "__main__":
     for setup in dict_product(scenarios_test):
         print(setup)
         tests.update({
-            "mysql": MySQLHandler(name=f"test-mysql_cpu{setup['cpu']}_mem{setup['mem']}", cpu_limit=setup["cpu"], memory_limit=setup["mem"], port=3306, sql_dialect="mysql"),
+            # "mysql": MySQLHandler(name=f"test-mysql_cpu{setup['cpu']}_mem{setup['mem']}", cpu_limit=setup["cpu"], memory_limit=setup["mem"], port=3306, sql_dialect="mysql"),
             "postgres": PostgresHandler(name=f"test-postgres_cpu{setup['cpu']}_mem{setup['mem']}", cpu_limit=setup["cpu"], memory_limit=setup["mem"], port=6543, sql_dialect="postgres"),
-            "duckdb": DuckDBHandler(
-                name=f"test-duckdb_cpu{setup['cpu']}_mem{setup['mem']}", cpu_limit=setup["cpu"], memory_limit=setup["mem"], db_file="duckdb_data.db", sql_dialect="duckdb"
-            ),
-            "clickhouse": ClickHouseHandler(
-                name=f"test-clickhouse_cpu{setup['cpu']}_mem{setup['mem']}", cpu_limit=setup["cpu"], memory_limit=setup["mem"], http_port=8124, tcp_port=9001, sql_dialect="clickhouse"
-            ),
+            # "duckdb": DuckDBHandler(
+            #     name=f"test-duckdb_cpu{setup['cpu']}_mem{setup['mem']}", cpu_limit=setup["cpu"], memory_limit=setup["mem"], db_file="duckdb_data.db", sql_dialect="duckdb"
+            # ),
+            # "clickhouse": ClickHouseHandler(
+            #     name=f"test-clickhouse_cpu{setup['cpu']}_mem{setup['mem']}", cpu_limit=setup["cpu"], memory_limit=setup["mem"], http_port=8124, tcp_port=9001, sql_dialect="clickhouse"
+            # ),
         })
 
     benchmarker.define_database_handlers(database_handlers=tests)
@@ -62,10 +62,10 @@ if __name__ == "__main__":
     #   )
     
     # Load local time series dataset
-    benchmarker.get_local_csv('../data/no_headers_brandenburger_gate_seriescalc.csv') #
+    benchmarker.get_data_from_kaggle(handle="devdope/900k-spotify", path="spotify_dataset.csv")
  
     # Load the queries to be executed
-    queries = load_queries_split_by_semicolon('../protocol_queries.sql')
+    queries = load_queries_split_by_semicolon('../protocol_queries_2.0.sql')
     
     # Define the queries to be executed
     benchmarker.define_queries(queries=queries)
@@ -74,4 +74,4 @@ if __name__ == "__main__":
     results_df = benchmarker.benchmark_queries()
 
     # Save results to CSV
-    benchmarker.save_metrics_to_csv("database_benchmark_results.csv")
+    benchmarker.save_metrics_to_csv("database_benchmark_results2.csv")
