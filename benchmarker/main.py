@@ -8,6 +8,7 @@ from bench.databases import (
 )
 from bench.bench import Benchmarker
 from bench.query_parser import load_queries_split_by_semicolon
+from itertools import product
 
 
 logging.basicConfig(
@@ -23,18 +24,37 @@ logger = logging.getLogger("main")
 if __name__ == "__main__":
     benchmarker = Benchmarker()
 
-    databases = {
-        # "mysql": MySQLHandler(name="test-mysql", port=3306, cpu_limit=2, memory_limit="4G", sql_dialect="mysql"),
-        # "postgres": PostgresHandler(name="test-postgres", port=6543, cpu_limit=2, sql_dialect="postgres"),
-        "duckdb": DuckDBHandler(
-            name="test-duckdb", db_file="duckdb_data.db", cpu_limit=2, sql_dialect="duckdb"
-        ),
-        "clickhouse": ClickHouseHandler(
-            name="test-clickhouse", http_port=8124, tcp_port=9001, cpu_limit=2, sql_dialect="clickhouse"
-        ),
+
+    def dict_product(d):
+        """Returns a list of dictionaries with all combinations of the input dict's values."""
+        keys = d.keys()
+        return [dict(zip(keys, values)) for values in product(*d.values())]
+
+
+    scenarios_test = {
+        "cpu": [2],
+        "mem": ["2G"],
+    }
+    scenarios_full = {
+        "cpu": [2, 4, 6,  8, 10, 14, 18],
+        "mem": ["2G", "4G", "8G", "16G", "32G", "64G"],
     }
 
-    benchmarker.define_database_handlers(database_handlers=databases)
+    tests = {}
+    for setup in dict_product(scenarios_test):
+        print(setup)
+        tests.update({
+            "mysql": MySQLHandler(name=f"test-mysql_cpu{setup['cpu']}_mem{setup['mem']}", cpu_limit=setup["cpu"], memory_limit=setup["mem"], port=3306, sql_dialect="mysql"),
+            "postgres": PostgresHandler(name=f"test-postgres_cpu{setup['cpu']}_mem{setup['mem']}", cpu_limit=setup["cpu"], memory_limit=setup["mem"], port=6543, sql_dialect="postgres"),
+            "duckdb": DuckDBHandler(
+                name=f"test-duckdb_cpu{setup['cpu']}_mem{setup['mem']}", cpu_limit=setup["cpu"], memory_limit=setup["mem"], db_file="duckdb_data.db", sql_dialect="duckdb"
+            ),
+            "clickhouse": ClickHouseHandler(
+                name=f"test-clickhouse_cpu{setup['cpu']}_mem{setup['mem']}", cpu_limit=setup["cpu"], memory_limit=setup["mem"], http_port=8124, tcp_port=9001, sql_dialect="clickhouse"
+            ),
+        })
+
+    benchmarker.define_database_handlers(database_handlers=tests)
 
     # Load the iris dataset
     #benchmarker.get_data(
@@ -42,13 +62,10 @@ if __name__ == "__main__":
     #   )
     
     # Load local time series dataset
-    benchmarker.get_data_from_kaggle(
-        handle="devdope/900k-spotify",
-        path="spotify_dataset.csv"
-    )
+    benchmarker.get_local_csv('../data/no_headers_brandenburger_gate_seriescalc.csv') #
  
     # Load the queries to be executed
-    queries =load_queries_split_by_semicolon('../protocol_queries.sql')
+    queries = load_queries_split_by_semicolon('../protocol_queries.sql')
     
     # Define the queries to be executed
     benchmarker.define_queries(queries=queries)

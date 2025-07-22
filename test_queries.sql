@@ -1,19 +1,57 @@
-CREATE TABLE IF NOT EXISTS data AS SELECT * FROM read_csv('/Users/macbook/Development/database_crash_test/data/no_headers_brandenburger_gate_seriescalc.csv')
-;
+CREATE OR REPLACE TABLE data 
+AS SELECT * 
+FROM read_csv('/Users/macbook/Development/database_crash_test/data/no_headers_brandenburger_gate_seriescalc.csv');
+
+
+-- error queries wih mysql
+['-- The INTERVAL creates an error in mysql
+-- WINDOW FUNCTION Queries
+-- Power output changes
+SELECT
+    d.time,
+    power_output as power_output,\n    
+    LAG(power_output) OVER (ORDER BY time) as previous_power_output,\n    
+    power_output - LAG(power_output) OVER (ORDER BY time) as power_change\n
+    FROM data as d']
+
+-- test solution
+SELECT
+    time,
+    power_output,
+    previous_power_output,
+    power_output - previous_power_output as power_change
+FROM (
+    SELECT
+        d.time,
+        power_output,
+        LAG(power_output) OVER (ORDER BY time) as previous_power_output
+    FROM data as d
+) as subquery;
+
+-- soluton 2
+SELECT
+    d1.time,
+    d1.power_output,
+    d2.power_output AS previous_power_output,
+    d1.power_output - d2.power_output AS power_change
+FROM data d1
+LEFT JOIN data d2 ON d2.time = (SELECT MAX(time) FROM data WHERE time < d1.time)
+ORDER BY d1.time;
+
 
 -- 16. Moving Average of Power Output 
 SELECT
     time,
-    P,
-    AVG(P) OVER (ORDER BY time ROWS BETWEEN 9 PRECEDING AND CURRENT ROW) as moving_average_10_row
+    power_output,
+    AVG(power_output) OVER (ORDER BY time ROWS BETWEEN 9 PRECEDING AND CURRENT ROW) as moving_average_10_row
 FROM data
 ORDER BY time;
 
 -- 17. Rank Data within Partitions
 SELECT
     DAY(time) as day,
-    P as power_output,
-    RANK() OVER (PARTITION BY P ORDER BY P ASC) as power_rank_in_category
+    power_output,
+    RANK() OVER (PARTITION BY power_output ORDER BY power_output ASC) as power_rank_in_category
 FROM data
 ORDER BY power_rank_in_category; -- Ordering results is separate from window function ordering
 
@@ -31,13 +69,6 @@ ORDER BY power_rank_in_category; -- Ordering results is separate from window fun
 --     description VARCHAR(255),
 --     is_active <BOOLEAN_TYPE>
 -- );
-SELECT 1; -- Dummy query to satisfy parser if the actual DDL is commented out
--- Notes:
--- <AUTO_INCREMENT_SYNTAX> (PostgreSQL: SERIAL, MySQL: AUTO_INCREMENT, DuckDB: INTEGER PRIMARY KEY AUTOINCREMENT)
--- <TIMESTAMP_TYPE> (TIMESTAMP, DATETIME)
--- <FLOAT_TYPE> (DOUBLE PRECISION, DOUBLE)
--- <BOOLEAN_TYPE> (BOOLEAN, TINYINT(1))
--- This query would need conditional generation in your Python code.
 
 -- 19. Create an Index (Tests index creation performance)
 -- Indexes are crucial for query performance, especially on filtered/ordered columns.
@@ -86,3 +117,97 @@ FROM DailyMaxPower;
 -- Standard SQL doesn't have a built-in CORR function, but many databases do.
 SELECT CORR(P, temperature) FROM data; -- Replace temperature with your actual column name
 -- Notes: CORR() function availability varies (Postgres, DuckDB usually have it). MySQL might require calculation.
+
+---
+
+CREATE OR REPLACE TABLE data AS SELECT * 
+FROM read_csv('/Users/macbook/Development/database_crash_test/data/spotify_dataset.csv');
+
+select count(*) as total_rows
+from spotify_data as s;
+
+select
+    column_name,
+    data_type
+from INFORMATION_SCHEMA.columns
+where table_name = 'data';
+
+SELECT 
+    DISTINCT a1.REPLACE((' ','') as artist, Artist(s), ,'') as artist,Artist(s), 
+    COUNT(*) AS duplicate_count 
+FROM data a1 
+JOIN data a2 
+ON a1.artist = a2.artist 
+GROUP BY a1.artist;
+
+-- REMOVE ANY CHARACTERS & REPLACE SPACES WITH UNDERSCORES
+-- LOWERCASE EVERYTHING
+SELECT 
+    column_name,
+    data_type,
+    LOWER(REPLACE(column_name, ' ', '_')) AS transformed_column_name
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE table_name = 'data';
+
+-- CREATE TABLE STATEMENT FROM COLUMN INFO
+
+SELECT
+     CONCAT(
+        LOWER(REPLACE(REGEXP_REPLACE(column_name, '[^a-z0-9_]', ''), ' ', '_')),
+      ' ',
+      data_type
+    ORDER BY ordinal_position
+  ) AS create_table_columns
+FROM
+  INFORMATION_SCHEMA.COLUMNS
+WHERE table_name = 'data';
+
+
+CREATE OR REPLACE TABLE data AS
+SELECT
+  'Artist(s)' AS artists,                 
+  song AS song,                           -- Just lowercase
+  text AS text,
+  'Length' AS length,                 -- Just lowercase
+  emotion AS emotion,
+  Genre AS genre,
+  Album AS album,
+  'Release Date' AS release_date,               
+  Key AS key,
+  Tempo AS tempo,
+  'Loudness (db)' AS loudness_db,               
+  'Time signature' AS time_signature,                 
+  Explicit AS explicit,
+  Popularity AS popularity,
+  Energy AS energy,
+  Danceability AS danceability,
+  Positiveness AS positiveness,
+  Speechiness AS speechiness,
+  Liveness AS liveness,
+  Acousticness AS acousticness,
+  Instrumentalness AS instrumentalness,
+  'Good for Party' AS good_for_party,             -- 
+  'Good for Work/Study' AS good_for_work_study,               
+  'Good for Relaxation/Meditation' AS good_for_relaxation_meditation,  
+  'Good for Exercise' AS good_for_exercise,               
+  'Good for Running' AS good_for_running,                 
+  'Good for Yoga/Stretching' AS good_for_yoga_stretching,           
+  'Good for Driving' AS good_for_driving,               
+  'Good for Social Gatherings' AS good_for_social_gatherings,           
+  'Good for Morning Routine' AS good_for_morning_routine,             
+  'Similar Artist 1' AS similar_artist_1,             
+  'Similar Song 1' AS similar_song_1,               
+  'Similarity Score 1' AS similarity_score_1,             
+  'Similar Artist 2' AS similar_artist_2,
+  'Similar Song 2' AS similar_song_2,
+  'Similarity Score 2' AS similarity_score_2,
+  'Similar Artist 3' AS similar_artist_3,
+  'Similar Song 3' AS similar_song_3,
+  'Similarity Score 3' AS similarity_score_3
+FROM data;
+
+SELECT 
+    column_name,
+    data_type
+    FROM INFORMATION_SCHEMA.columns
+WHERE table_name = 'data';

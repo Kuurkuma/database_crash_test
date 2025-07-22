@@ -4,8 +4,7 @@ import docker
 from docker.models.containers import Container
 from typing import Optional, Dict, List, Any, Tuple
 import logging
-from sqlalchemy import create_engine, text
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import create_engine
 import pandas as pd
 import psutil
 import sqlglot
@@ -723,7 +722,9 @@ class PostgresHandler(DockerDatabaseHandler):
         if not self.is_running():
             return False
 
+        
         try:
+            time.sleep(5)
             exit_code, _ = self.container.exec_run(
                 f"pg_isready -U {self.username} -d {self.database}", stderr=False
             )

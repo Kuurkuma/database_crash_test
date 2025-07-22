@@ -10,3 +10,4 @@ benchmarker/docs/build/**
 .venv
 ../.idea
 **/.idea
+data/spotify_dataset.csv
