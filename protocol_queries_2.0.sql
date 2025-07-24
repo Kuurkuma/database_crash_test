@@ -28,17 +28,17 @@ SELECT
     MAX(tempo) AS max_tempo 
 FROM data;
 
--- FILTER BY 'text' WITH 'love' & 'explicit' = 1'
+-- FILTER BY LIKE OPERATOR & 2 CONDITIONS
 SELECT * 
 FROM data 
-WHERE text LIKE '%love%'
-AND explicit = 1;
+WHERE text LIKE '%%love%%'
+AND tempo < 120;
 
 -- SELF-JOIN ON 'artist' TO FIND DUPLICATE ARTISTS
 SELECT 
-    DISTINCT a1."Artist(s)" AS artists, 
+    DISTINCT a1.artist_s AS artists, 
     COUNT(*) AS duplicate_count 
 FROM data AS a1 
 JOIN data AS a2 
-ON a1."Artist(s)" = a2."Artist(s)"  
-GROUP BY a1."Artist(s)";
+ON a1.artist_s = a2.artist_s
+GROUP BY a1.artist_s;
