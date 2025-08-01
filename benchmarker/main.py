@@ -41,19 +41,19 @@ if __name__ == "__main__":
     }
 
     tests = {}
-    for setup in dict_product(scenarios_test):
-        print(setup)
+    for setup in dict_product(scenarios_full):
         tests.update({
-            "mysql": MySQLHandler(name=f"test-mysql_cpu{setup['cpu']}_mem{setup['mem']}", cpu_limit=setup["cpu"], memory_limit=setup["mem"], port=3306, sql_dialect="mysql"),
-            "postgres": PostgresHandler(name=f"test-postgres_cpu{setup['cpu']}_mem{setup['mem']}", cpu_limit=setup["cpu"], memory_limit=setup["mem"], port=6543, sql_dialect="postgres"),
-             "duckdb": DuckDBHandler(
+            f"mysql_cpu{setup['cpu']}_mem{setup['mem']}": MySQLHandler(name=f"test-mysql_cpu{setup['cpu']}_mem{setup['mem']}", cpu_limit=setup["cpu"], memory_limit=setup["mem"], port=3306, sql_dialect="mysql"),
+            f"postgres_cpu{setup['cpu']}_mem{setup['mem']}": PostgresHandler(name=f"test-postgres_cpu{setup['cpu']}_mem{setup['mem']}", cpu_limit=setup["cpu"], memory_limit=setup["mem"], port=6543, sql_dialect="postgres"),
+             f"duckdb_cpu{setup['cpu']}_mem{setup['mem']}": DuckDBHandler(
                  name=f"test-duckdb_cpu{setup['cpu']}_mem{setup['mem']}", cpu_limit=setup["cpu"], memory_limit=setup["mem"], db_file="duckdb_data.db", sql_dialect="duckdb"
              ),
-             "clickhouse": ClickHouseHandler(
+             f"clickhouse_cpu{setup['cpu']}_mem{setup['mem']}": ClickHouseHandler(
                  name=f"test-clickhouse_cpu{setup['cpu']}_mem{setup['mem']}", cpu_limit=setup["cpu"], memory_limit=setup["mem"], http_port=8124, tcp_port=9001, sql_dialect="clickhouse"
              ),
         })
 
+    print(tests)
     benchmarker.define_database_handlers(database_handlers=tests)
 
     # Load the iris dataset
@@ -74,4 +74,4 @@ if __name__ == "__main__":
     results_df = benchmarker.benchmark_queries()
 
     # Save results to CSV
-    benchmarker.save_metrics_to_csv("database_benchmark_results2.csv")
+    benchmarker.save_metrics_to_csv("database_benchmark_results3.csv")

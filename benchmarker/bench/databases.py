@@ -57,7 +57,7 @@ class QueryMetrics:
     :type result_size_mb: int
     """
 
-    def __init__(self, query: str, original_query: str, database_type: str):
+    def __init__(self, query: str, original_query: str, database_type: str, memory_limit: str, cpu_limit: float):
         self.query = query
         self.original_query = original_query
         self.database_type = database_type
@@ -72,6 +72,8 @@ class QueryMetrics:
         self.result_rows = 0
         self.result_size_mb = 0
         self.failed = False
+        self.memory_limit = memory_limit
+        self.cpu_limit = cpu_limit
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert metrics to dictionary."""
@@ -90,6 +92,8 @@ class QueryMetrics:
             "result_rows": self.result_rows,
             "result_size_mb": self.result_size_mb,
             "failed": self.failed,
+            "memory_limit": self.memory_limit,
+            "cpu_limit": self.cpu_limit,
         }
 
 
@@ -224,7 +228,7 @@ class DockerDatabaseHandler(object):
             mem_limit=self.memory_limit,
         )
 
-        logger.info(f"Started container: {self.name} ({self.container.id[:12]})")
+        logger.info(f"Started container: {self.name} ({self.container.id[:12]}), with memory limit: {self.memory_limit} and cpu limit: {self.cpu_limit}")
 
         # Wait for container to be ready
         self._wait_for_ready(wait_time)
@@ -352,7 +356,13 @@ class DockerDatabaseHandler(object):
         transpiled_query = sqlglot.transpile(query, read="postgres", write=self.sql_dialect)[0]
         logger.info(f"Transpiled query: from {query} to {transpiled_query}")
 
-        metrics = QueryMetrics(query=transpiled_query, original_query=query, database_type=self.__class__.__name__)
+        metrics = QueryMetrics(
+            query=transpiled_query,
+            original_query=query,
+            database_type=self.__class__.__name__,
+            memory_limit = self.memory_limit,
+            cpu_limit = self.cpu_limit,
+        )
         result = pd.DataFrame()
 
         # Initialize stats collection
