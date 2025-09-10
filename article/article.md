@@ -70,10 +70,14 @@ This is the 900k songs spotify dataset available on Kaggle
 
 > *Insert CPU/RAM matrix with execution time per database and query. Include charts or Markdown tables here.*
 
-#### Execution time
+### Execution time
 
-
-
+| Database Type | Avg Execution Time (ms) | Median Execution Time (ms) | Min Execution Time (ms) | Max Execution Time (ms) | Total Execution Time |
+| :--- | ---:| ---:| ---:| ---:| ---:|
+| DuckDBHandler | 343.50 | 19.15 | 2.56 | 1,924.00 | 2,404.52 |
+| PostgresHandler | 525.87 | 73.24 | 20.75 | 1,644.80 | 3,681.11 |
+| ClickHouseHandler | 691.89 | 36.33 | 6.34 | 3,437.88 | 4,843.24 |
+| MySQLHandler | 9,876.19 | 1,027.34 | 22.90 | 62,273.31 | 69,133.35 |
 
 
 
