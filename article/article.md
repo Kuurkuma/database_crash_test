@@ -1,9 +1,9 @@
 # **Tiny Giants: Benchmarking Postgres, MySQL, ClickHouse, and DuckDB Under Resource Constraints**
 
-**Author:** \[Your Name]
+**Author:** \ Teddy Bernays, Pieter Geelen
 **Audience:** Data Engineers, DB Architects
-**Last updated:** \[Insert Date]
-**Code & Benchmark Repo:** *\[Insert GitHub/Repo Link]*
+**Last updated:** \10-09-2025
+**Code & Benchmark Repo:** *\[Database crash test](https://github.com/Kuurkuma/database_crash_test)*
 
 ## 🔧 Benchmark Scope and Setup
 
@@ -18,7 +18,7 @@ Test how four SQL databases perform under constrained environments—simulating 
 | PostgreSQL | `x.y.z`      | Baseline RDBMS, well-optimized                        |
 | MySQL      | `x.y.z`      | Lightweight and popular, but limited in OLAP features |
 | ClickHouse | `x.y.z`      | High-performance columnar database                    |
-| DuckDB     | `x.y.z`      | Embedded OLAP engine with modern architecture         |
+| DuckDB     | `1.3.0`      | Embedded OLAP engine with modern architecture         |
 
 ### Test Matrix
 
@@ -31,12 +31,12 @@ scenarios_full = {
 
 ### Dataset
 
-* Table: `data`
-* Columns:
+This is the 900k songs spotify dataset available on Kaggle
 
-  * `time` (TIMESTAMP)
-  * `power_output` (FLOAT)
-* Size: \[Insert number of rows and storage size]
+* Size: \ 1.36GB - 39 columns - 900,000 rows
+* Columns:
+[See Dataset here](https://www.kaggle.com/datasets/devdope/900k-spotify/data)
+
 
 
 ## 📋 Query Workload Overview
@@ -70,14 +70,11 @@ scenarios_full = {
 
 > *Insert CPU/RAM matrix with execution time per database and query. Include charts or Markdown tables here.*
 
-#### Example Table (Q2 - COUNT)
+#### Execution time
 
-| CPU | RAM | Postgres | MySQL | ClickHouse | DuckDB   |
-| --- | --- | -------- | ----- | ---------- | -------- |
-| 2   | 2G  | 320ms    | 290ms | 110ms      | **45ms** |
-| 4   | 4G  | ...      | ...   | ...        | ...      |
 
-> *Use similar tables per query or one aggregate table per category.*
+
+
 
 
 ## 📊 Query Results by Category
