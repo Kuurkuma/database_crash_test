@@ -1,10 +1,10 @@
 CREATE OR REPLACE TABLE data 
 AS SELECT * 
-FROM read_csv('/Users/macbook/Development/database_crash_test/data/no_headers_brandenburger_gate_seriescalc.csv');
+FROM read_csv("/Users/macbook/Development/database_crash_test/data/no_headers_brandenburger_gate_seriescalc.csv");
 
 
 -- error queries wih mysql
-['-- The INTERVAL creates an error in mysql
+["-- The INTERVAL creates an error in mysql
 -- WINDOW FUNCTION Queries
 -- Power output changes
 SELECT
@@ -12,7 +12,7 @@ SELECT
     power_output as power_output,\n    
     LAG(power_output) OVER (ORDER BY time) as previous_power_output,\n    
     power_output - LAG(power_output) OVER (ORDER BY time) as power_change\n
-    FROM data as d']
+    FROM data as d"]
 
 -- test solution
 SELECT
@@ -91,18 +91,18 @@ DROP TABLE IF EXISTS new_empty_table; -- Use the table created in query 18
 -- 22. Basic Update
 UPDATE data SET P = P * 1.05 WHERE time = (SELECT MIN(time) FROM data LIMIT 1); -- Added LIMIT 1 for robustness with subquery
 -- Notes: Using a subquery to select a specific row makes it deterministic.
--- Updating multiple rows (e.g., UPDATE data SET P = P * 1.05 WHERE category = 'TypeB') is another test.
+-- Updating multiple rows (e.g., UPDATE data SET P = P * 1.05 WHERE category = "TypeB") is another test.
 
 -- 23. Basic Delete
 DELETE FROM data WHERE time = (SELECT MAX(time) FROM data LIMIT 1); -- Added LIMIT 1
--- Notes: Deleting multiple rows (e.g., DELETE FROM data WHERE category = 'TypeC') is another test.
+-- Notes: Deleting multiple rows (e.g., DELETE FROM data WHERE category = "TypeC") is another test.
 
 
 -- Complex / Combination Queries
 -- 24. Subquery/CTE to Find Daily Max Power and then Average of Daily Max
 WITH DailyMaxPower AS (
     SELECT
-        DATE(time) as event_date, -- Or DATE_TRUNC('day', time) for Postgres/DuckDB, or simply DATE(time) for MySQL/DuckDB
+        DATE(time) as event_date, -- Or DATE_TRUNC("day", time) for Postgres/DuckDB, or simply DATE(time) for MySQL/DuckDB
         MAX(P) as max_P_day
     FROM data
     GROUP BY DATE(time) -- Ensure consistency with SELECT part
@@ -113,15 +113,15 @@ FROM DailyMaxPower;
 -- You could also group by year/month/day components using EXTRACT.
 
 -- 25. Correlation between two numerical columns (e.g., Power and Temperature)
--- Requires a 'temperature' column.
--- Standard SQL doesn't have a built-in CORR function, but many databases do.
+-- Requires a "temperature" column.
+-- Standard SQL doesn"t have a built-in CORR function, but many databases do.
 SELECT CORR(P, temperature) FROM data; -- Replace temperature with your actual column name
 -- Notes: CORR() function availability varies (Postgres, DuckDB usually have it). MySQL might require calculation.
 
 ---
 
 CREATE OR REPLACE TABLE data AS SELECT * 
-FROM read_csv('/Users/macbook/Development/database_crash_test/data/spotify_dataset.csv');
+FROM read_csv("/Users/macbook/Development/database_crash_test/data/spotify_dataset.csv");
 
 select count(*) as total_rows
 from spotify_data as s;
@@ -130,10 +130,10 @@ select
     column_name,
     data_type
 from INFORMATION_SCHEMA.columns
-where table_name = 'data';
+where table_name = "data";
 
 SELECT 
-    DISTINCT a1.REPLACE((' ','') as artist, Artist(s), ,'') as artist,Artist(s), 
+    DISTINCT a1.REPLACE((" ","") as artist, Artist(s), ,"") as artist,Artist(s), 
     COUNT(*) AS duplicate_count 
 FROM data a1 
 JOIN data a2 
@@ -145,40 +145,39 @@ GROUP BY a1.artist;
 SELECT 
     column_name,
     data_type,
-    LOWER(REPLACE(column_name, ' ', '_')) AS transformed_column_name
+    LOWER(REPLACE(column_name, " ", "_")) AS transformed_column_name
 FROM INFORMATION_SCHEMA.COLUMNS
-WHERE table_name = 'data';
+WHERE table_name = "data";
 
 -- CREATE TABLE STATEMENT FROM COLUMN INFO
-
 SELECT
      CONCAT(
-        LOWER(REPLACE(REGEXP_REPLACE(column_name, '[^a-z0-9_]', ''), ' ', '_')),
-      ' ',
+        LOWER(REPLACE(REGEXP_REPLACE(column_name, "[^a-z0-9_]", ""), " ", "_")),
+      " ",
       data_type
     ORDER BY ordinal_position
   ) AS create_table_columns
 FROM
   INFORMATION_SCHEMA.COLUMNS
-WHERE table_name = 'data';
+WHERE table_name = "data";
 
 
 CREATE OR REPLACE TABLE data AS
 SELECT
-  'Artist(s)' AS artists,                 
-  song AS song,                           -- Just lowercase
-  text AS text,
-  'Length' AS length,                 -- Just lowercase
+  "Artist(s)" AS artists,                 
+  "song" AS song,                     
+  "text" AS text,
+  "Length" AS length,                 
   emotion AS emotion,
   Genre AS genre,
   Album AS album,
-  'Release Date' AS release_date,               
+  "Release Date" AS release_date,               
   Key AS key,
   Tempo AS tempo,
-  'Loudness (db)' AS loudness_db,               
-  'Time signature' AS time_signature,                 
+  "Loudness (db)" AS loudness_db,               
+  "Time signature" AS time_signature,                 
   Explicit AS explicit,
-  Popularity AS popularity,
+  popularity AS popularity,
   Energy AS energy,
   Danceability AS danceability,
   Positiveness AS positiveness,
@@ -186,28 +185,120 @@ SELECT
   Liveness AS liveness,
   Acousticness AS acousticness,
   Instrumentalness AS instrumentalness,
-  'Good for Party' AS good_for_party,             -- 
-  'Good for Work/Study' AS good_for_work_study,               
-  'Good for Relaxation/Meditation' AS good_for_relaxation_meditation,  
-  'Good for Exercise' AS good_for_exercise,               
-  'Good for Running' AS good_for_running,                 
-  'Good for Yoga/Stretching' AS good_for_yoga_stretching,           
-  'Good for Driving' AS good_for_driving,               
-  'Good for Social Gatherings' AS good_for_social_gatherings,           
-  'Good for Morning Routine' AS good_for_morning_routine,             
-  'Similar Artist 1' AS similar_artist_1,             
-  'Similar Song 1' AS similar_song_1,               
-  'Similarity Score 1' AS similarity_score_1,             
-  'Similar Artist 2' AS similar_artist_2,
-  'Similar Song 2' AS similar_song_2,
-  'Similarity Score 2' AS similarity_score_2,
-  'Similar Artist 3' AS similar_artist_3,
-  'Similar Song 3' AS similar_song_3,
-  'Similarity Score 3' AS similarity_score_3
+  "Good for Party" AS good_for_party,             -- 
+  "Good for Work/Study" AS good_for_work_study,               
+  "Good for Relaxation/Meditation" AS good_for_relaxation_meditation,  
+  "Good for Exercise" AS good_for_exercise,               
+  "Good for Running" AS good_for_running,                 
+  "Good for Yoga/Stretching" AS good_for_yoga_stretching,           
+  "Good for Driving" AS good_for_driving,               
+  "Good for Social Gatherings" AS good_for_social_gatherings,           
+  "Good for Morning Routine" AS good_for_morning_routine,             
+  "Similar Artist 1" AS similar_artist_1,             
+  "Similar Song 1" AS similar_song_1,               
+  "Similarity Score 1" AS similarity_score_1,             
+  "Similar Artist 2" AS similar_artist_2,
+  "Similar Song 2" AS similar_song_2,
+  "Similarity Score 2" AS similarity_score_2,
+  "Similar Artist 3" AS similar_artist_3,
+  "Similar Song 3" AS similar_song_3,
+  "Similarity Score 3" AS similarity_score_3
 FROM data;
 
+-- check the schema
 SELECT 
     column_name,
     data_type
-    FROM INFORMATION_SCHEMA.columns
-WHERE table_name = 'data';
+FROM INFORMATION_SCHEMA.columns
+--WHERE table_name = "data"
+;
+
+
+-- WINDOW FUNCTION (LEAD)
+-- find next popular song based on popularity grouped by artists
+SELECT 
+    artists,
+    song,
+    popularity,
+    LEAD(song,1) OVER (
+        PARTITION BY artists
+        ORDER BY popularity DESC) AS next_most_popular_song,
+    LEAD(popularity, 1) OVER(
+        PARTITION BY artists
+        ORDER BY popularity DESC) AS next_song_popularity
+FROM data
+ORDER BY artists, popularity DESC 
+;
+
+-- WINDOW FUNCTION WITH CTE
+-- top 10 songs by popularity per time_signature
+WITH ranked_songs AS (
+  SELECT
+    artists,
+    song,
+    time_signature,
+    popularity,
+    ROW_NUMBER() OVER (PARTITION BY time_signature ORDER BY popularity DESC) as popularity_rank
+  FROM data
+  WHERE time_signature IS NOT NULL
+)
+SELECT
+  *
+FROM ranked_songs
+WHERE popularity_rank <= 10
+ORDER BY
+    popularity DESC, 
+    popularity_rank;
+
+-- WINDOW FUNCTION WITH CTE & AGGREGRATION
+-- compare average danceability per artist
+WITH avg_danceability AS (
+    SELECT
+    song,
+    artists,
+    danceability,
+    AVG(danceability) OVER (
+        PARTITION BY artists) AS artist_avg_danceability,
+    danceability - AVG(danceability) OVER (
+        PARTITION BY artists) AS danceability_difference
+    FROM data
+    ORDER BY
+        artists,
+        danceability_difference DESC
+)
+SELECT
+    song,
+    artists,
+    danceability,
+    ROUND(artist_avg_danceability,2) as artist_avg_danceability,
+    ROUND(danceability_difference,2) as danceability_difference
+FROM avg_danceability
+
+-- WINDOW FUNCTION WITH CTE, STRING DATE MANIPULATION
+WITH artist_release_years AS (
+  SELECT DISTINCT
+    artists,
+    EXTRACT(year FROM strptime(
+      regexp_replace(release_date, '(\d+)(st|nd|rd|th)', '\1', 'g'), 
+      '%d %B %Y'
+    )) AS release_year
+  FROM 
+    data
+),
+
+artist_release_gaps AS (
+  SELECT
+    artists,
+    release_year,
+    -- Get the release year of the previous song for this artist
+    LAG(release_year, 1) OVER (PARTITION BY artists ORDER BY release_year) AS previous_release_year
+  FROM
+    artist_release_years
+)
+
+SELECT
+  artists,
+  previous_release_year,
+  release_year
+FROM artist_release_gaps
+ORDER BY artists, release_year;

@@ -190,7 +190,6 @@ DuckDB is not just fast—it reimagines the *scope* of databases:
 
 ## 📎 Next Steps
 
-* Add SQL lite database to the benchmark.
 * Add benchmarks on SSD vs RAMdisk.
 * Profile disk I/O bottlenecks.
 * Run on ARM64 and Apple Silicon.
