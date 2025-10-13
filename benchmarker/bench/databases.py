@@ -57,7 +57,7 @@ class QueryMetrics:
     :type result_size_mb: int
     """
 
-    def __init__(self, query: str, original_query: str, database_type: str, memory_limit: str, cpu_limit: float):
+    def __init__(self, query: str, original_query: str, database_type: str, memory_limit: str, cpu_limit: float, tag: str):
         self.query = query
         self.original_query = original_query
         self.database_type = database_type
@@ -74,6 +74,7 @@ class QueryMetrics:
         self.failed = False
         self.memory_limit = memory_limit
         self.cpu_limit = cpu_limit
+        self.tag = tag
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert metrics to dictionary."""
@@ -94,6 +95,7 @@ class QueryMetrics:
             "failed": self.failed,
             "memory_limit": self.memory_limit,
             "cpu_limit": self.cpu_limit,
+            "tag": self.tag,
         }
 
 
@@ -362,6 +364,7 @@ class DockerDatabaseHandler(object):
             database_type=self.__class__.__name__,
             memory_limit = self.memory_limit,
             cpu_limit = self.cpu_limit,
+            tag = self.tag
         )
         result = pd.DataFrame()
 
@@ -790,7 +793,7 @@ class ClickHouseHandler(DockerDatabaseHandler):
         user: str = "default",
         password: str = "wazzzuuup",
         database: str = "default",
-        tag: str = "latest",
+        tag: str = "25.9",
         cpu_limit: float = 2.0,
         memory_limit: str = "4g",
         sql_dialect: str = "clickhouse"
