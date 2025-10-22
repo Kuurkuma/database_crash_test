@@ -1,5 +1,6 @@
 import logging
 import sys
+import os
 from bench.databases import (
     MySQLHandler,
     PostgresHandler,
@@ -41,7 +42,7 @@ if __name__ == "__main__":
     }
 
     tests = {}
-    for setup in dict_product(scenarios_full):
+    for setup in dict_product(scenarios_test):
         tests.update({
             f"mysql_cpu{setup['cpu']}_mem{setup['mem']}": MySQLHandler(name=f"test-mysql_cpu{setup['cpu']}_mem{setup['mem']}", cpu_limit=setup["cpu"], memory_limit=setup["mem"], port=3306, sql_dialect="mysql"),
             f"postgres_cpu{setup['cpu']}_mem{setup['mem']}": PostgresHandler(name=f"test-postgres_cpu{setup['cpu']}_mem{setup['mem']}", cpu_limit=setup["cpu"], memory_limit=setup["mem"], port=6543, sql_dialect="postgres"),
@@ -61,12 +62,16 @@ if __name__ == "__main__":
     #   url="https://gist.githubusercontent.com/netj/8836201/raw/6f9306ad21398ea43cba4f7d537619d0e07d5ae3/iris.csv"
     #   )
     
-    # Load local time series dataset
-    benchmarker.get_data_from_kaggle(handle="devdope/900k-spotify", path="spotify_dataset.csv")
-    
+    # Construct a robust path to the SQL file, independent of the current working directory
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(script_dir)
+    sql_file_path = os.path.join(project_root, 'protocol_queries_2.0.sql')
+
     # Load the queries to be executed
-    queries = load_queries_split_by_semicolon('../protocol_queries_2.0.sql')
+    queries = load_queries_split_by_semicolon(sql_file_path)
     
+    benchmarker.get_data_from_kaggle(handle="devdope/900k-spotify", path="spotify_dataset.csv")
+
     # Define the queries to be executed
     benchmarker.define_queries(queries=queries)
 

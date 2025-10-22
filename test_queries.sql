@@ -164,7 +164,7 @@ WHERE table_name = "data";
 
 CREATE OR REPLACE TABLE data AS
 SELECT
-  "Artist(s)" AS artists,                 
+  "Artist(s)" AS artist_s,                 
   "song" AS song,                     
   "text" AS text,
   "Length" AS length,                 
@@ -217,24 +217,24 @@ FROM INFORMATION_SCHEMA.columns
 -- WINDOW FUNCTION (LEAD)
 -- find next popular song based on popularity grouped by artists
 SELECT 
-    artists,
+    artist_s,
     song,
     popularity,
     LEAD(song,1) OVER (
-        PARTITION BY artists
+        PARTITION BY artist_s
         ORDER BY popularity DESC) AS next_most_popular_song,
     LEAD(popularity, 1) OVER(
-        PARTITION BY artists
+        PARTITION BY artist_s
         ORDER BY popularity DESC) AS next_song_popularity
 FROM data
-ORDER BY artists, popularity DESC 
+ORDER BY artist_s, popularity DESC 
 ;
 
 -- WINDOW FUNCTION WITH CTE
 -- top 10 songs by popularity per time_signature
 WITH ranked_songs AS (
   SELECT
-    artists,
+    artist_s,
     song,
     time_signature,
     popularity,
@@ -255,20 +255,20 @@ ORDER BY
 WITH avg_danceability AS (
     SELECT
     song,
-    artists,
+    artist_s,
     danceability,
     AVG(danceability) OVER (
-        PARTITION BY artists) AS artist_avg_danceability,
+        PARTITION BY artist_s) AS artist_avg_danceability,
     danceability - AVG(danceability) OVER (
-        PARTITION BY artists) AS danceability_difference
+        PARTITION BY artist_s) AS danceability_difference
     FROM data
     ORDER BY
-        artists,
+        artist_s,
         danceability_difference DESC
 )
 SELECT
     song,
-    artists,
+    artist_s,
     danceability,
     ROUND(artist_avg_danceability,2) as artist_avg_danceability,
     ROUND(danceability_difference,2) as danceability_difference
@@ -277,7 +277,7 @@ FROM avg_danceability
 -- WINDOW FUNCTION WITH CTE, STRING DATE MANIPULATION
 WITH artist_release_years AS (
   SELECT DISTINCT
-    artists,
+    artist_s,
     EXTRACT(year FROM strptime(
       regexp_replace(release_date, '(\d+)(st|nd|rd|th)', '\1', 'g'), 
       '%d %B %Y'
@@ -288,17 +288,17 @@ WITH artist_release_years AS (
 
 artist_release_gaps AS (
   SELECT
-    artists,
+    artist_s,
     release_year,
     -- Get the release year of the previous song for this artist
-    LAG(release_year, 1) OVER (PARTITION BY artists ORDER BY release_year) AS previous_release_year
+    LAG(release_year, 1) OVER (PARTITION BY artist_s ORDER BY release_year) AS previous_release_year
   FROM
     artist_release_years
 )
 
 SELECT
-  artists,
+  artist_s,
   previous_release_year,
   release_year
 FROM artist_release_gaps
-ORDER BY artists, release_year;
+ORDER BY artist_s, release_year;
