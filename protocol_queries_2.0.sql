@@ -83,12 +83,9 @@ ORDER BY
 WITH artist_release_years AS (
   SELECT DISTINCT
     artist_s,
-    EXTRACT(year FROM to_timestamp(regexp_replace(release_date, '(\d+)(st|nd|rd|th)', '\1', 'g'), 
-      '%%d %%B %%Y'
-    )) AS release_year
-  FROM 
-    data
-),
+    EXTRACT(year FROM strptime(regexp_replace(release_date, '%d %B %Y'))) AS release_year 
+  FROM data
+  ),
 
 artist_release_gaps AS (
   SELECT

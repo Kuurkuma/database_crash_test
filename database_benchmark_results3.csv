@@ -1,132 +1,34 @@
 query,original_query,database_type,execution_time_ms,cpu_usage_percent,memory_usage_mb,memory_usage_percent,disk_read_mb,disk_write_mb,network_in_mb,network_out_mb,result_rows,result_size_mb,failed,memory_limit,cpu_limit
 /* TOP 1000 ROWS */ SELECT * FROM data LIMIT 1000,"-- TOP 1000 ROWS
-SELECT * FROM data LIMIT 1000",MySQLHandler,37.11819648742676,1.6801198801198802,2079.5234375,12.971120411658458,0.0,0.0,0.010873794555664062,2.2875003814697266,1000,3.920193672180176,False,32G,10
+SELECT * FROM data LIMIT 1000",PostgresHandler,128.39388847351074,0.8616999999999999,1164.59765625,7.264755663052689,0.0,0.0,0.020717620849609375,2.4442873001098633,1000,3.9677934646606445,False,32G,10
 /* COUNT ALL */ SELECT COUNT(*) FROM data,"-- COUNT ALL
-SELECT COUNT(*) FROM data",MySQLHandler,360.9030246734619,2.823476523476524,2103.84375,13.12281944817709,0.0,0.0,0.00148773193359375,0.0018167495727539062,1,0.000133514404296875,False,32G,10
-"/* DISTINCT VALUES & COUNT OF 'genre' */ SELECT DISTINCT genre, COUNT(genre) AS genre_count FROM data GROUP BY genre ORDER BY CASE WHEN genre_count IS NULL THEN 1 ELSE 0 END DESC, genre_count DESC","-- DISTINCT VALUES & COUNT OF 'genre'
-SELECT 
-    DISTINCT genre,
-    COUNT(genre) AS genre_count 
-FROM data 
-GROUP BY genre 
-ORDER BY genre_count DESC",MySQLHandler,2221.4090824127197,1.6852147852147854,2149.03125,13.404678499646336,0.0,0.0,0.0023508071899414062,0.09203433990478516,3097,0.23495960235595703,False,32G,10
-"/* DISTINCT VALUES IN COLUMN 'album' */ SELECT DISTINCT album, COUNT(album) AS album_count FROM data GROUP BY album ORDER BY CASE WHEN album_count IS NULL THEN 1 ELSE 0 END DESC, album_count DESC","-- DISTINCT VALUES IN COLUMN 'album'
-SELECT 
-    DISTINCT album,
-    COUNT(album) AS album_count 
-FROM data 
-GROUP BY album 
-ORDER BY album_count DESC",MySQLHandler,3071.6371536254883,1.233400402414487,2173.76953125,13.558984634929422,0.0,0.0,0.018400192260742188,4.039602279663086,151168,11.28181266784668,False,32G,10
-"/* STATS (AVG, SUM, MIN, MAX) FOR COLUMN 'tempo' */ SELECT AVG(tempo) AS avg_tempo, SUM(tempo) AS sum_tempo, MIN(tempo) AS min_tempo, MAX(tempo) AS max_tempo FROM data","-- STATS (AVG, SUM, MIN, MAX) FOR COLUMN 'tempo'
-SELECT 
-    AVG(tempo) AS avg_tempo,
-    SUM(tempo) AS sum_tempo, 
-    MIN(tempo) AS min_tempo, 
-    MAX(tempo) AS max_tempo 
-FROM data",MySQLHandler,978.2190322875977,3.1628514056224897,2184.83984375,13.628036204073945,0.0,0.0,0.0016269683837890625,0.0019350051879882812,1,0.000156402587890625,False,32G,10
-/* FILTER BY LIKE OPERATOR & 2 CONDITIONS */ SELECT * FROM data WHERE text LIKE '%%love%%' AND tempo < 120,"-- FILTER BY LIKE OPERATOR & 2 CONDITIONS
-SELECT * 
-FROM data 
-WHERE text LIKE '%%love%%'
-AND tempo < 120",MySQLHandler,7084.001779556274,1.2811434302908726,2178.44140625,13.588125664109679,0.0,0.0,1.026127815246582,255.69964408874512,119158,433.5639772415161,False,32G,10
-"/* SELF-JOIN ON 'artist' TO FIND DUPLICATE ARTISTS */ SELECT DISTINCT a1.artist_s AS artists, COUNT(*) AS duplicate_count FROM data AS a1 JOIN data AS a2 ON a1.artist_s = a2.artist_s GROUP BY a1.artist_s","-- SELF-JOIN ON 'artist' TO FIND DUPLICATE ARTISTS
-SELECT 
-    DISTINCT a1.artist_s AS artists, 
-    COUNT(*) AS duplicate_count 
-FROM data AS a1 
-JOIN data AS a2 
-ON a1.artist_s = a2.artist_s
-GROUP BY a1.artist_s",MySQLHandler,116495.54491043091,1.1902195608782435,614.49609375,3.8329468573373626,0.0,0.0,0.014872550964355469,3.477482795715332,127197,9.554627418518066,False,32G,10
-"/* WINDOW FUNCTION (LEAD) */ /* find next popular song based on popularity grouped by artists */ SELECT artist_s, song, popularity, LEAD(song, 1) OVER (PARTITION BY artist_s ORDER BY CASE WHEN popularity IS NULL THEN 1 ELSE 0 END DESC, popularity DESC) AS next_most_popular_song, LEAD(popularity, 1) OVER (PARTITION BY artist_s ORDER BY CASE WHEN popularity IS NULL THEN 1 ELSE 0 END DESC, popularity DESC) AS next_song_popularity FROM data ORDER BY CASE WHEN artist_s IS NULL THEN 1 ELSE 0 END, artist_s, CASE WHEN popularity IS NULL THEN 1 ELSE 0 END DESC, popularity DESC","-- WINDOW FUNCTION (LEAD)
--- find next popular song based on popularity grouped by artists
-SELECT 
-    artist_s,
-    song,
-    popularity,
-    LEAD(song,1) OVER (
-        PARTITION BY artist_s
-        ORDER BY popularity DESC) AS next_most_popular_song,
-    LEAD(popularity, 1) OVER(
-        PARTITION BY artist_s
-        ORDER BY popularity DESC) AS next_song_popularity
-FROM data
-ORDER BY artist_s, popularity DESC",MySQLHandler,12399.364233016968,2.4286144578313253,2041.42578125,12.733484577548884,0.0,0.0,0.06225013732910156,28.14993953704834,551443,104.40272903442383,False,32G,10
-"/* WINDOW FUNCTION WITH CTE */ /* top 10 songs by popularity per time_signature */ WITH ranked_songs AS (SELECT artist_s, song, time_signature, popularity, ROW_NUMBER() OVER (PARTITION BY time_signature ORDER BY CASE WHEN popularity IS NULL THEN 1 ELSE 0 END DESC, popularity DESC) AS popularity_rank FROM data WHERE NOT time_signature IS NULL) SELECT * FROM ranked_songs WHERE popularity_rank <= 10 ORDER BY CASE WHEN popularity IS NULL THEN 1 ELSE 0 END DESC, popularity DESC, CASE WHEN popularity_rank IS NULL THEN 1 ELSE 0 END, popularity_rank","-- WINDOW FUNCTION WITH CTE
--- top 10 songs by popularity per time_signature
-WITH ranked_songs AS (
-  SELECT
-    artist_s,
-    song,
-    time_signature,
-    popularity,
-    ROW_NUMBER() OVER (PARTITION BY time_signature ORDER BY popularity DESC) as popularity_rank
-  FROM data
-  WHERE time_signature IS NOT NULL
-)
-SELECT
-  *
-FROM ranked_songs
-WHERE popularity_rank <= 10
-ORDER BY
-    popularity DESC, 
-    popularity_rank",MySQLHandler,8145.437240600586,1.136963036963037,2032.046875,12.674983230507248,0.0,0.0,0.0019159317016601562,0.0036268234252929688,40,0.007498741149902344,False,32G,10
-"/* WINDOW FUNCTION WITH CTE, STRING DATE MANIPULATION */ WITH artist_release_years AS (SELECT DISTINCT artist_s, EXTRACT(YEAR FROM STR_TO_DATE(REGEXP_REPLACE(release_date, '(\\d+)(st|nd|rd|th)', '\\1', 'g'), '%%%u %%M %%Y')) AS release_year FROM data), artist_release_gaps AS (SELECT artist_s, release_year, LAG(release_year, 1) OVER (PARTITION BY artist_s ORDER BY CASE WHEN release_year IS NULL THEN 1 ELSE 0 END, release_year) AS previous_release_year /* Get the release year of the previous song for this artist */ FROM artist_release_years) SELECT artist_s, previous_release_year, release_year FROM artist_release_gaps ORDER BY CASE WHEN artist_s IS NULL THEN 1 ELSE 0 END, artist_s, CASE WHEN release_year IS NULL THEN 1 ELSE 0 END, release_year","-- WINDOW FUNCTION WITH CTE, STRING DATE MANIPULATION
-WITH artist_release_years AS (
-  SELECT DISTINCT
-    artist_s,
-    EXTRACT(year FROM to_timestamp(regexp_replace(release_date, '(\d+)(st|nd|rd|th)', '\1', 'g'), 
-      '%%d %%B %%Y'
-    )) AS release_year
-  FROM 
-    data
-),
-
-artist_release_gaps AS (
-  SELECT
-    artist_s,
-    release_year,
-    -- Get the release year of the previous song for this artist
-    LAG(release_year, 1) OVER (PARTITION BY artist_s ORDER BY release_year) AS previous_release_year
-  FROM
-    artist_release_years
-)
-
-SELECT
-  artist_s,
-  previous_release_year,
-  release_year
-FROM artist_release_gaps
-ORDER BY artist_s, release_year",MySQLHandler,49.69906806945801,2.1742484969939877,2048.765625,12.779267181085425,0.0,0.0,0.0020799636840820312,0.0016794204711914062,0,0.0,True,32G,10
-/* TOP 1000 ROWS */ SELECT * FROM data LIMIT 1000,"-- TOP 1000 ROWS
-SELECT * FROM data LIMIT 1000",PostgresHandler,124.07302856445312,3.207492507492507,1753.8515625,10.939727531377166,0.0,0.0,0.0213470458984375,2.4446020126342773,1000,3.9677934646606445,False,32G,10
-/* COUNT ALL */ SELECT COUNT(*) FROM data,"-- COUNT ALL
-SELECT COUNT(*) FROM data",PostgresHandler,175.81892013549805,0.7458917835671343,999.1875,6.2324767024050365,0.0,0.0,0.001827239990234375,0.0024976730346679688,1,0.000133514404296875,False,32G,10
+SELECT COUNT(*) FROM data",PostgresHandler,201.56598091125488,1.1217,1171.81640625,7.309786197556363,0.0,0.0,0.001827239990234375,0.0024976730346679688,1,0.000133514404296875,False,32G,10
 "/* DISTINCT VALUES & COUNT OF 'genre' */ SELECT DISTINCT genre, COUNT(genre) AS genre_count FROM data GROUP BY genre ORDER BY genre_count DESC","-- DISTINCT VALUES & COUNT OF 'genre'
 SELECT 
     DISTINCT genre,
     COUNT(genre) AS genre_count 
 FROM data 
 GROUP BY genre 
-ORDER BY genre_count DESC",PostgresHandler,403.6269187927246,7.1752752752752755,1017.5859375,6.347237778859061,0.0,0.0,0.003009796142578125,0.1196603775024414,3097,0.23495960235595703,False,32G,10
+ORDER BY genre_count DESC",PostgresHandler,242.47384071350098,0.8995995995995997,1169.20703125,7.293508926426247,0.0,0.0,0.0032663345336914062,0.1196603775024414,3097,0.23495960235595703,False,32G,10
 "/* DISTINCT VALUES IN COLUMN 'album' */ SELECT DISTINCT album, COUNT(album) AS album_count FROM data GROUP BY album ORDER BY album_count DESC","-- DISTINCT VALUES IN COLUMN 'album'
 SELECT 
     DISTINCT album,
     COUNT(album) AS album_count 
 FROM data 
 GROUP BY album 
-ORDER BY album_count DESC",PostgresHandler,903.1460285186768,14.455867602808425,1027.0625,6.406348261126038,0.0,0.0,0.04587745666503906,5.453701019287109,154682,11.50865650177002,False,32G,10
+ORDER BY album_count DESC",PostgresHandler,995.8531856536865,0.11054216867469879,1180.86328125,7.366220568720055,0.0,0.0,0.04530620574951172,5.453512191772461,154682,11.50865650177002,False,32G,10
 "/* STATS (AVG, SUM, MIN, MAX) FOR COLUMN 'tempo' */ SELECT AVG(tempo) AS avg_tempo, SUM(tempo) AS sum_tempo, MIN(tempo) AS min_tempo, MAX(tempo) AS max_tempo FROM data","-- STATS (AVG, SUM, MIN, MAX) FOR COLUMN 'tempo'
 SELECT 
     AVG(tempo) AS avg_tempo,
     SUM(tempo) AS sum_tempo, 
     MIN(tempo) AS min_tempo, 
     MAX(tempo) AS max_tempo 
-FROM data",PostgresHandler,815.0479793548584,11.978478478478479,1179.5703125,7.357622559834744,0.0,0.0,0.0019664764404296875,0.0026187896728515625,1,0.000156402587890625,False,32G,10
+FROM data",PostgresHandler,1047.1570491790771,0.5913913913913915,1332.07421875,8.30947381040683,0.0,0.0,0.0019664764404296875,0.0026187896728515625,1,0.000156402587890625,False,32G,10
 /* FILTER BY LIKE OPERATOR & 2 CONDITIONS */ SELECT * FROM data WHERE text LIKE '%%love%%' AND tempo < 120,"-- FILTER BY LIKE OPERATOR & 2 CONDITIONS
 SELECT * 
 FROM data 
 WHERE text LIKE '%%love%%'
-AND tempo < 120",PostgresHandler,2541.675090789795,14.8061876247505,1310.59765625,8.174911474377701,0.0,0.0,2.0373287200927734,264.6317768096924,115044,419.287654876709,False,32G,10
+AND tempo < 120",PostgresHandler,3092.2787189483643,0.051955867602808424,1395.5703125,8.705562196963752,0.0,0.0,2.0335235595703125,264.641881942749,115044,419.287654876709,False,32G,10
 "/* SELF-JOIN ON 'artist' TO FIND DUPLICATE ARTISTS */ SELECT DISTINCT a1.artist_s AS artists, COUNT(*) AS duplicate_count FROM data AS a1 JOIN data AS a2 ON a1.artist_s = a2.artist_s GROUP BY a1.artist_s","-- SELF-JOIN ON 'artist' TO FIND DUPLICATE ARTISTS
 SELECT 
     DISTINCT a1.artist_s AS artists, 
@@ -134,7 +36,7 @@ SELECT
 FROM data AS a1 
 JOIN data AS a2 
 ON a1.artist_s = a2.artist_s
-GROUP BY a1.artist_s",PostgresHandler,3625.763177871704,11.283483483483483,1390.50390625,8.673330281159766,0.0,0.0,0.039139747619628906,4.595521926879883,127334,9.563119888305664,False,32G,10
+GROUP BY a1.artist_s",PostgresHandler,4288.1669998168945,0.0843313373253493,1454.10546875,9.070704274635577,0.0,0.0,0.039139747619628906,4.595521926879883,127334,9.563119888305664,False,32G,10
 "/* WINDOW FUNCTION (LEAD) */ /* find next popular song based on popularity grouped by artists */ SELECT artist_s, song, popularity, LEAD(song, 1) OVER (PARTITION BY artist_s ORDER BY popularity DESC) AS next_most_popular_song, LEAD(popularity, 1) OVER (PARTITION BY artist_s ORDER BY popularity DESC) AS next_song_popularity FROM data ORDER BY artist_s, popularity DESC","-- WINDOW FUNCTION (LEAD)
 -- find next popular song based on popularity grouped by artists
 SELECT 
@@ -148,7 +50,7 @@ SELECT
         PARTITION BY artist_s
         ORDER BY popularity DESC) AS next_song_popularity
 FROM data
-ORDER BY artist_s, popularity DESC",PostgresHandler,2079.7948837280273,14.061661661661661,1345.40625,8.392031634097831,0.0,0.0,0.30274295806884766,37.82727813720703,551443,104.3970422744751,False,32G,10
+ORDER BY artist_s, popularity DESC",PostgresHandler,2544.4507598876953,8.447082494969818,1125.18359375,7.018890894036427,0.0,0.0,0.30173587799072266,37.826523780822754,551443,104.3958511352539,False,32G,10
 "/* WINDOW FUNCTION WITH CTE */ /* top 10 songs by popularity per time_signature */ WITH ranked_songs AS (SELECT artist_s, song, time_signature, popularity, ROW_NUMBER() OVER (PARTITION BY time_signature ORDER BY popularity DESC) AS popularity_rank FROM data WHERE NOT time_signature IS NULL) SELECT * FROM ranked_songs WHERE popularity_rank <= 10 ORDER BY popularity DESC, popularity_rank","-- WINDOW FUNCTION WITH CTE
 -- top 10 songs by popularity per time_signature
 WITH ranked_songs AS (
@@ -167,17 +69,14 @@ FROM ranked_songs
 WHERE popularity_rank <= 10
 ORDER BY
     popularity DESC, 
-    popularity_rank",PostgresHandler,790.9119129180908,21.64656031904287,1388.6640625,8.661854173514362,0.0,0.0,0.0022554397583007812,0.004775047302246094,40,0.0074520111083984375,False,32G,10
-"/* WINDOW FUNCTION WITH CTE, STRING DATE MANIPULATION */ WITH artist_release_years AS (SELECT DISTINCT artist_s, EXTRACT(YEAR FROM TO_TIMESTAMP(REGEXP_REPLACE(release_date, '(\d+)(st|nd|rd|th)', '\1', 'g'), '%%D %TMMonth %YYYY')) AS release_year FROM data), artist_release_gaps AS (SELECT artist_s, release_year, LAG(release_year, 1) OVER (PARTITION BY artist_s ORDER BY release_year) AS previous_release_year /* Get the release year of the previous song for this artist */ FROM artist_release_years) SELECT artist_s, previous_release_year, release_year FROM artist_release_gaps ORDER BY artist_s, release_year","-- WINDOW FUNCTION WITH CTE, STRING DATE MANIPULATION
+    popularity_rank",PostgresHandler,1039.0992164611816,0.10849150849150849,1166.7265625,7.278035771983697,0.0,0.0,0.0022554397583007812,0.004847526550292969,40,0.0075244903564453125,False,32G,10
+"/* WINDOW FUNCTION WITH CTE, STRING DATE MANIPULATION */ WITH artist_release_years AS (SELECT DISTINCT artist_s, EXTRACT(YEAR FROM STRPTIME(REGEXP_REPLACE(release_date, '%d %B %Y'))) AS release_year FROM data), artist_release_gaps AS (SELECT artist_s, release_year, LAG(release_year, 1) OVER (PARTITION BY artist_s ORDER BY release_year) AS previous_release_year /* Get the release year of the previous song for this artist */ FROM artist_release_years) SELECT artist_s, previous_release_year, release_year FROM artist_release_gaps ORDER BY artist_s, release_year","-- WINDOW FUNCTION WITH CTE, STRING DATE MANIPULATION
 WITH artist_release_years AS (
   SELECT DISTINCT
     artist_s,
-    EXTRACT(year FROM to_timestamp(regexp_replace(release_date, '(\d+)(st|nd|rd|th)', '\1', 'g'), 
-      '%%d %%B %%Y'
-    )) AS release_year
-  FROM 
-    data
-),
+    EXTRACT(year FROM strptime(regexp_replace(release_date, '%d %B %Y'))) AS release_year 
+  FROM data
+  ),
 
 artist_release_gaps AS (
   SELECT
@@ -194,37 +93,37 @@ SELECT
   previous_release_year,
   release_year
 FROM artist_release_gaps
-ORDER BY artist_s, release_year",PostgresHandler,405.53808212280273,10.5894,1423.5,8.879144891097585,0.0,0.0,0.0024824142456054688,0.0027217864990234375,0,0.0,True,32G,10
+ORDER BY artist_s, release_year",PostgresHandler,78.92894744873047,0.0837865055387714,1173.0390625,7.31741312250206,0.0,0.0,0.0015726089477539062,0.00208282470703125,0,0.0,True,32G,10
 /* TOP 1000 ROWS */ SELECT * FROM data LIMIT 1000,"-- TOP 1000 ROWS
-SELECT * FROM data LIMIT 1000",DuckDBHandler,43.272972106933594,0.0063,7.5859375,0.04731762430439803,0.0,0.0,0.0,0.0,1000,3.920193672180176,False,32G,10
+SELECT * FROM data LIMIT 1000",DuckDBHandler,36.39793395996094,0.0051204819277108436,7.4765625,0.046638767878803535,0.0,0.0,0.0,0.0,1000,3.920193672180176,False,32G,10
 /* COUNT ALL */ SELECT COUNT(*) FROM data,"-- COUNT ALL
-SELECT COUNT(*) FROM data",DuckDBHandler,3.8199424743652344,0.005605605605605606,7.5859375,0.04731762430439803,0.0,0.0,0.0,0.0,1,0.000133514404296875,False,32G,10
+SELECT COUNT(*) FROM data",DuckDBHandler,9.387969970703125,0.005421686746987953,7.4765625,0.046638767878803535,0.0,0.0,0.0,0.0,1,0.000133514404296875,False,32G,10
 "/* DISTINCT VALUES & COUNT OF 'genre' */ SELECT DISTINCT genre, COUNT(genre) AS genre_count FROM data GROUP BY genre ORDER BY genre_count DESC NULLS FIRST","-- DISTINCT VALUES & COUNT OF 'genre'
 SELECT 
     DISTINCT genre,
     COUNT(genre) AS genre_count 
 FROM data 
 GROUP BY genre 
-ORDER BY genre_count DESC",DuckDBHandler,20.39480209350586,0.002811244979919679,7.5859375,0.04731762430439803,0.0,0.0,0.0,0.0,3097,0.23495960235595703,False,32G,10
+ORDER BY genre_count DESC",DuckDBHandler,24.363040924072266,0.017334669338677357,7.4765625,0.046638767878803535,0.0,0.0,0.0,0.0,3097,0.23495960235595703,False,32G,10
 "/* DISTINCT VALUES IN COLUMN 'album' */ SELECT DISTINCT album, COUNT(album) AS album_count FROM data GROUP BY album ORDER BY album_count DESC NULLS FIRST","-- DISTINCT VALUES IN COLUMN 'album'
 SELECT 
     DISTINCT album,
     COUNT(album) AS album_count 
 FROM data 
 GROUP BY album 
-ORDER BY album_count DESC",DuckDBHandler,182.2681427001953,0.0049098196392785565,7.5859375,0.04731762430439803,0.0,0.0,0.0,0.0,154682,11.50865650177002,False,32G,10
+ORDER BY album_count DESC",DuckDBHandler,175.92096328735352,0.003,7.4765625,0.046638767878803535,0.0,0.0,0.0,0.0,154682,11.50865650177002,False,32G,10
 "/* STATS (AVG, SUM, MIN, MAX) FOR COLUMN 'tempo' */ SELECT AVG(tempo) AS avg_tempo, SUM(tempo) AS sum_tempo, MIN(tempo) AS min_tempo, MAX(tempo) AS max_tempo FROM data","-- STATS (AVG, SUM, MIN, MAX) FOR COLUMN 'tempo'
 SELECT 
     AVG(tempo) AS avg_tempo,
     SUM(tempo) AS sum_tempo, 
     MIN(tempo) AS min_tempo, 
     MAX(tempo) AS max_tempo 
-FROM data",DuckDBHandler,11.872053146362305,0.006879361914257229,7.5859375,0.04731762430439803,0.0,0.0,0.0,0.0,1,0.000156402587890625,False,32G,10
+FROM data",DuckDBHandler,13.72218132019043,0.013165829145728643,6.31640625,0.03940171769071333,0.0,0.0,0.0,0.0,1,0.000156402587890625,False,32G,10
 /* FILTER BY LIKE OPERATOR & 2 CONDITIONS */ SELECT * FROM data WHERE text LIKE '%%love%%' AND tempo < 120,"-- FILTER BY LIKE OPERATOR & 2 CONDITIONS
 SELECT * 
 FROM data 
 WHERE text LIKE '%%love%%'
-AND tempo < 120",DuckDBHandler,2462.0509147644043,0.0059118236472945895,7.5859375,0.04731762430439803,0.0,0.0,0.0,0.0,115044,419.287654876709,False,32G,10
+AND tempo < 120",DuckDBHandler,3134.152889251709,0.0060999999999999995,6.31640625,0.03940171769071333,0.0,0.0,0.0,0.0,115044,419.287654876709,False,32G,10
 "/* SELF-JOIN ON 'artist' TO FIND DUPLICATE ARTISTS */ SELECT DISTINCT a1.artist_s AS artists, COUNT(*) AS duplicate_count FROM data AS a1 JOIN data AS a2 ON a1.artist_s = a2.artist_s GROUP BY a1.artist_s","-- SELF-JOIN ON 'artist' TO FIND DUPLICATE ARTISTS
 SELECT 
     DISTINCT a1.artist_s AS artists, 
@@ -232,7 +131,7 @@ SELECT
 FROM data AS a1 
 JOIN data AS a2 
 ON a1.artist_s = a2.artist_s
-GROUP BY a1.artist_s",DuckDBHandler,258.99505615234375,0.011546184738955823,7.5859375,0.04731762430439803,0.0,0.0,0.0,0.0,127334,9.563119888305664,False,32G,10
+GROUP BY a1.artist_s",DuckDBHandler,301.71704292297363,0.018856569709127382,6.31640625,0.03940171769071333,0.0,0.0,0.0,0.0,127334,9.563119888305664,False,32G,10
 "/* WINDOW FUNCTION (LEAD) */ /* find next popular song based on popularity grouped by artists */ SELECT artist_s, song, popularity, LEAD(song, 1) OVER (PARTITION BY artist_s ORDER BY popularity DESC NULLS FIRST) AS next_most_popular_song, LEAD(popularity, 1) OVER (PARTITION BY artist_s ORDER BY popularity DESC NULLS FIRST) AS next_song_popularity FROM data ORDER BY artist_s, popularity DESC NULLS FIRST","-- WINDOW FUNCTION (LEAD)
 -- find next popular song based on popularity grouped by artists
 SELECT 
@@ -246,7 +145,7 @@ SELECT
         PARTITION BY artist_s
         ORDER BY popularity DESC) AS next_song_popularity
 FROM data
-ORDER BY artist_s, popularity DESC",DuckDBHandler,1070.9688663482666,0.002902902902902903,7.5859375,0.04731762430439803,0.0,0.0,0.0,0.0,551443,104.39664363861084,False,32G,10
+ORDER BY artist_s, popularity DESC",DuckDBHandler,1126.1918544769287,0.014271356783919598,6.31640625,0.03940171769071333,0.0,0.0,0.0,0.0,551443,104.3969497680664,False,32G,10
 "/* WINDOW FUNCTION WITH CTE */ /* top 10 songs by popularity per time_signature */ WITH ranked_songs AS (SELECT artist_s, song, time_signature, popularity, ROW_NUMBER() OVER (PARTITION BY time_signature ORDER BY popularity DESC NULLS FIRST) AS popularity_rank FROM data WHERE NOT time_signature IS NULL) SELECT * FROM ranked_songs WHERE popularity_rank <= 10 ORDER BY popularity DESC NULLS FIRST, popularity_rank","-- WINDOW FUNCTION WITH CTE
 -- top 10 songs by popularity per time_signature
 WITH ranked_songs AS (
@@ -265,17 +164,14 @@ FROM ranked_songs
 WHERE popularity_rank <= 10
 ORDER BY
     popularity DESC, 
-    popularity_rank",DuckDBHandler,74.06401634216309,0.006999999999999999,7.5859375,0.04731762430439803,0.0,0.0,0.0,0.0,40,0.007567405700683594,False,32G,10
-"/* WINDOW FUNCTION WITH CTE, STRING DATE MANIPULATION */ WITH artist_release_years AS (SELECT DISTINCT artist_s, EXTRACT(YEAR FROM STRPTIME(REGEXP_REPLACE(release_date, '(\d+)(st|nd|rd|th)', '\1', 'g'), '%%%u %%B %%Y')) AS release_year FROM data), artist_release_gaps AS (SELECT artist_s, release_year, LAG(release_year, 1) OVER (PARTITION BY artist_s ORDER BY release_year) AS previous_release_year /* Get the release year of the previous song for this artist */ FROM artist_release_years) SELECT artist_s, previous_release_year, release_year FROM artist_release_gaps ORDER BY artist_s, release_year","-- WINDOW FUNCTION WITH CTE, STRING DATE MANIPULATION
+    popularity_rank",DuckDBHandler,95.67713737487793,0.007370517928286853,6.31640625,0.03940171769071333,0.0,0.0,0.0,0.0,40,0.007559776306152344,False,32G,10
+"/* WINDOW FUNCTION WITH CTE, STRING DATE MANIPULATION */ WITH artist_release_years AS (SELECT DISTINCT artist_s, EXTRACT(YEAR FROM STRPTIME(REGEXP_REPLACE(release_date, '%d %B %Y'))) AS release_year FROM data), artist_release_gaps AS (SELECT artist_s, release_year, LAG(release_year, 1) OVER (PARTITION BY artist_s ORDER BY release_year) AS previous_release_year /* Get the release year of the previous song for this artist */ FROM artist_release_years) SELECT artist_s, previous_release_year, release_year FROM artist_release_gaps ORDER BY artist_s, release_year","-- WINDOW FUNCTION WITH CTE, STRING DATE MANIPULATION
 WITH artist_release_years AS (
   SELECT DISTINCT
     artist_s,
-    EXTRACT(year FROM to_timestamp(regexp_replace(release_date, '(\d+)(st|nd|rd|th)', '\1', 'g'), 
-      '%%d %%B %%Y'
-    )) AS release_year
-  FROM 
-    data
-),
+    EXTRACT(year FROM strptime(regexp_replace(release_date, '%d %B %Y'))) AS release_year 
+  FROM data
+  ),
 
 artist_release_gaps AS (
   SELECT
@@ -292,37 +188,37 @@ SELECT
   previous_release_year,
   release_year
 FROM artist_release_gaps
-ORDER BY artist_s, release_year",DuckDBHandler,11.154890060424805,0.0048951048951048955,7.5859375,0.04731762430439803,0.0,0.0,0.0,0.0,0,0.0,True,32G,10
+ORDER BY artist_s, release_year",DuckDBHandler,7.725954055786133,0.005734406438631791,6.31640625,0.03940171769071333,0.0,0.0,0.0,0.0,0,0.0,True,32G,10
 /* TOP 1000 ROWS */ SELECT * FROM data LIMIT 1000,"-- TOP 1000 ROWS
-SELECT * FROM data LIMIT 1000",ClickHouseHandler,169.9960231781006,7.1342,2057.56640625,12.83416244759305,0.0,0.0,0.004092216491699219,2.330778121948242,1000,3.920193672180176,False,32G,10
+SELECT * FROM data LIMIT 1000",ClickHouseHandler,168.08223724365234,12.854363089267803,2041.98828125,12.73791497903692,0.0,0.0,0.0033369064331054688,2.330338478088379,1000,3.920193672180176,False,32G,10
 /* COUNT ALL */ SELECT COUNT(*) FROM data,"-- COUNT ALL
-SELECT COUNT(*) FROM data",ClickHouseHandler,23.80990982055664,5.680181086519115,2005.40625,12.50881114103454,0.0,0.0,0.0023221969604492188,0.0044574737548828125,1,0.000133514404296875,False,32G,10
+SELECT COUNT(*) FROM data",ClickHouseHandler,37.457942962646484,9.181143430290874,2052.10546875,12.801025955424643,0.0,0.0,0.0023221969604492188,0.0044574737548828125,1,0.000133514404296875,False,32G,10
 "/* DISTINCT VALUES & COUNT OF 'genre' */ SELECT DISTINCT genre, COUNT(genre) AS genre_count FROM data GROUP BY genre ORDER BY genre_count DESC NULLS FIRST","-- DISTINCT VALUES & COUNT OF 'genre'
 SELECT 
     DISTINCT genre,
     COUNT(genre) AS genre_count 
 FROM data 
 GROUP BY genre 
-ORDER BY genre_count DESC",ClickHouseHandler,95.10922431945801,5.154354354354354,2048.19140625,12.775685465960427,0.0,0.0,0.0024938583374023438,0.08253288269042969,3097,0.23495960235595703,False,32G,10
+ORDER BY genre_count DESC",ClickHouseHandler,122.59817123413086,10.468542713567839,2040.0546875,12.725853228723437,0.0,0.0,0.0033121109008789062,0.08265876770019531,3097,0.23495960235595703,False,32G,10
 "/* DISTINCT VALUES IN COLUMN 'album' */ SELECT DISTINCT album, COUNT(album) AS album_count FROM data GROUP BY album ORDER BY album_count DESC NULLS FIRST","-- DISTINCT VALUES IN COLUMN 'album'
 SELECT 
     DISTINCT album,
     COUNT(album) AS album_count 
 FROM data 
 GROUP BY album 
-ORDER BY album_count DESC",ClickHouseHandler,458.68897438049316,5.524598393574297,2057.7109375,12.835063967726553,0.0,0.0,0.004192352294921875,3.509359359741211,154682,11.50868034362793,False,32G,10
+ORDER BY album_count DESC",ClickHouseHandler,501.9803047180176,9.503972194637536,2063.00390625,12.86901036628246,0.0,0.0,0.0048847198486328125,3.5093584060668945,154682,11.50868034362793,False,32G,10
 "/* STATS (AVG, SUM, MIN, MAX) FOR COLUMN 'tempo' */ SELECT AVG(tempo) AS avg_tempo, SUM(tempo) AS sum_tempo, MIN(tempo) AS min_tempo, MAX(tempo) AS max_tempo FROM data","-- STATS (AVG, SUM, MIN, MAX) FOR COLUMN 'tempo'
 SELECT 
     AVG(tempo) AS avg_tempo,
     SUM(tempo) AS sum_tempo, 
     MIN(tempo) AS min_tempo, 
     MAX(tempo) AS max_tempo 
-FROM data",ClickHouseHandler,27.761220932006836,6.141683366733466,2060.109375,12.8500243288609,0.0,0.0,0.002902984619140625,0.0045337677001953125,1,0.000156402587890625,False,32G,10
+FROM data",ClickHouseHandler,36.70907020568848,11.805923694779116,2018.90625,12.593929357617984,0.0,0.0,0.0027141571044921875,0.004535675048828125,1,0.000156402587890625,False,32G,10
 /* FILTER BY LIKE OPERATOR & 2 CONDITIONS */ SELECT * FROM data WHERE text LIKE '%%love%%' AND tempo < 120,"-- FILTER BY LIKE OPERATOR & 2 CONDITIONS
 SELECT * 
 FROM data 
 WHERE text LIKE '%%love%%'
-AND tempo < 120",ClickHouseHandler,11415.36808013916,5.81636546184739,2426.61328125,15.136108829561284,0.0,0.0,0.02296161651611328,251.87012195587158,115044,419.28827476501465,False,32G,10
+AND tempo < 120",ClickHouseHandler,11450.138807296753,11.514170854271358,2057.6875,12.83584664471347,0.0,0.0,0.02179431915283203,251.89755153656006,115044,419.28827476501465,False,32G,10
 "/* SELF-JOIN ON 'artist' TO FIND DUPLICATE ARTISTS */ SELECT DISTINCT a1.artist_s AS artists, COUNT(*) AS duplicate_count FROM data AS a1 JOIN data AS a2 ON a1.artist_s = a2.artist_s GROUP BY a1.artist_s","-- SELF-JOIN ON 'artist' TO FIND DUPLICATE ARTISTS
 SELECT 
     DISTINCT a1.artist_s AS artists, 
@@ -330,7 +226,7 @@ SELECT
 FROM data AS a1 
 JOIN data AS a2 
 ON a1.artist_s = a2.artist_s
-GROUP BY a1.artist_s",ClickHouseHandler,842.231035232544,7.6478391959799,2176.78125,13.577770365278901,0.0,0.0,0.026030540466308594,3.0337610244750977,127334,9.563119888305664,False,32G,10
+GROUP BY a1.artist_s",ClickHouseHandler,832.921028137207,13.077989949748742,2232.76953125,13.928007676633976,0.0,0.0,0.023512840270996094,3.034390449523926,127334,9.563119888305664,False,32G,10
 "/* WINDOW FUNCTION (LEAD) */ /* find next popular song based on popularity grouped by artists */ SELECT artist_s, song, popularity, leadInFrame(song, 1) OVER (PARTITION BY artist_s ORDER BY popularity DESC NULLS FIRST) AS next_most_popular_song, leadInFrame(popularity, 1) OVER (PARTITION BY artist_s ORDER BY popularity DESC NULLS FIRST) AS next_song_popularity FROM data ORDER BY artist_s, popularity DESC NULLS FIRST","-- WINDOW FUNCTION (LEAD)
 -- find next popular song based on popularity grouped by artists
 SELECT 
@@ -344,7 +240,7 @@ SELECT
         PARTITION BY artist_s
         ORDER BY popularity DESC) AS next_song_popularity
 FROM data
-ORDER BY artist_s, popularity DESC",ClickHouseHandler,37.622928619384766,7.1157947686116705,2167.11328125,13.517465977970259,0.0,0.0,0.002872467041015625,0.004590034484863281,0,0.0,True,32G,10
+ORDER BY artist_s, popularity DESC",ClickHouseHandler,70.03474235534668,12.414612326043738,2087.92578125,13.024472925878472,0.0,0.0,0.0026836395263671875,0.0046539306640625,0,0.0,True,32G,10
 "/* WINDOW FUNCTION WITH CTE */ /* top 10 songs by popularity per time_signature */ WITH ranked_songs AS (SELECT artist_s, song, time_signature, popularity, ROW_NUMBER() OVER (PARTITION BY time_signature ORDER BY popularity DESC NULLS FIRST) AS popularity_rank FROM data WHERE NOT (time_signature IS NULL)) SELECT * FROM ranked_songs WHERE popularity_rank <= 10 ORDER BY popularity DESC NULLS FIRST, popularity_rank","-- WINDOW FUNCTION WITH CTE
 -- top 10 songs by popularity per time_signature
 WITH ranked_songs AS (
@@ -363,17 +259,14 @@ FROM ranked_songs
 WHERE popularity_rank <= 10
 ORDER BY
     popularity DESC, 
-    popularity_rank",ClickHouseHandler,127.86412239074707,5.4005015045135405,2087.79296875,13.022701982540235,0.0,0.0,0.0028772354125976562,0.0062084197998046875,48,0.008913993835449219,False,32G,10
-"/* WINDOW FUNCTION WITH CTE, STRING DATE MANIPULATION */ WITH artist_release_years AS (SELECT DISTINCT artist_s, EXTRACT(YEAR FROM STR_TO_TIME(REGEXP_REPLACE(release_date, '(\\d+)(st|nd|rd|th)', '\\1', 'g'), '%%%u %%B %%Y')) AS release_year FROM data), artist_release_gaps AS (SELECT artist_s, release_year, lagInFrame(release_year, 1) OVER (PARTITION BY artist_s ORDER BY release_year) AS previous_release_year /* Get the release year of the previous song for this artist */ FROM artist_release_years) SELECT artist_s, previous_release_year, release_year FROM artist_release_gaps ORDER BY artist_s, release_year","-- WINDOW FUNCTION WITH CTE, STRING DATE MANIPULATION
+    popularity_rank",ClickHouseHandler,154.1457176208496,10.484939759036145,2164.58203125,13.502654316084136,0.0,0.0,0.0026884078979492188,0.006209373474121094,48,0.008913993835449219,False,32G,10
+"/* WINDOW FUNCTION WITH CTE, STRING DATE MANIPULATION */ WITH artist_release_years AS (SELECT DISTINCT artist_s, EXTRACT(YEAR FROM strptime(REGEXP_REPLACE(release_date, '%d %B %Y'))) AS release_year FROM data), artist_release_gaps AS (SELECT artist_s, release_year, lagInFrame(release_year, 1) OVER (PARTITION BY artist_s ORDER BY release_year) AS previous_release_year /* Get the release year of the previous song for this artist */ FROM artist_release_years) SELECT artist_s, previous_release_year, release_year FROM artist_release_gaps ORDER BY artist_s, release_year","-- WINDOW FUNCTION WITH CTE, STRING DATE MANIPULATION
 WITH artist_release_years AS (
   SELECT DISTINCT
     artist_s,
-    EXTRACT(year FROM to_timestamp(regexp_replace(release_date, '(\d+)(st|nd|rd|th)', '\1', 'g'), 
-      '%%d %%B %%Y'
-    )) AS release_year
-  FROM 
-    data
-),
+    EXTRACT(year FROM strptime(regexp_replace(release_date, '%d %B %Y'))) AS release_year 
+  FROM data
+  ),
 
 artist_release_gaps AS (
   SELECT
@@ -390,4 +283,4 @@ SELECT
   previous_release_year,
   release_year
 FROM artist_release_gaps
-ORDER BY artist_s, release_year",ClickHouseHandler,25.06709098815918,6.420301507537689,2099.73828125,13.097211403303804,0.0,0.0,0.0028524398803710938,0.004576683044433594,0,0.0,True,32G,10
+ORDER BY artist_s, release_year",ClickHouseHandler,28.691768646240234,13.902416918429003,2101.48046875,13.10902701393461,0.0,0.0,0.0017910003662109375,0.0030117034912109375,0,0.0,True,32G,10
