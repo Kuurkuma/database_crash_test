@@ -79,4 +79,4 @@ if __name__ == "__main__":
     results_df = benchmarker.benchmark_queries()
 
     # Save results to CSV
-    benchmarker.save_metrics_to_csv("database_benchmark_results3.csv")
+    benchmarker.save_metrics_to_csv("database_benchmark_results4.csv")

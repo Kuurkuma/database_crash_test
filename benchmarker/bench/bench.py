@@ -182,8 +182,13 @@ class Benchmarker(object):
                         except Exception as e:
                             logger.error(f"Error running query '{query[:60]}...': {e}")
                             # Create a failed metrics entry
-                            failed_metrics = QueryMetrics(query=query, original_query=query,
-                                                        database_type=database_handler.__class__.__name__)
+                            failed_metrics = QueryMetrics(query=query,
+                                                          original_query=query,
+                                                          database_type=database_handler.__class__.__name__,
+                                                          cpu_limit=database_handler.cpu_limit,
+                                                          memory_limit=database_handler.memory_limit,
+                                                          tag=database_handler.tag,
+                            )
                             failed_metrics.failed = True
                             all_metrics.append(failed_metrics.to_dict())
 
