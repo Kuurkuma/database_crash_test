@@ -42,7 +42,7 @@ if __name__ == "__main__":
     }
 
     tests = {}
-    for setup in dict_product(scenarios_test):
+    for setup in dict_product(scenarios_full):
         tests.update({
             f"mysql_cpu{setup['cpu']}_mem{setup['mem']}": MySQLHandler(name=f"test-mysql_cpu{setup['cpu']}_mem{setup['mem']}", cpu_limit=setup["cpu"], memory_limit=setup["mem"], port=3306, sql_dialect="mysql"),
             f"postgres_cpu{setup['cpu']}_mem{setup['mem']}": PostgresHandler(name=f"test-postgres_cpu{setup['cpu']}_mem{setup['mem']}", cpu_limit=setup["cpu"], memory_limit=setup["mem"], port=6543, sql_dialect="postgres"),
@@ -79,4 +79,4 @@ if __name__ == "__main__":
     results_df = benchmarker.benchmark_queries()
 
     # Save results to CSV
-    benchmarker.save_metrics_to_csv("database_benchmark_results5.csv")
+    benchmarker.save_metrics_to_csv("database_benchmark_results6.csv")
