@@ -1,0 +1,114 @@
+query,original_query,database_type,execution_time_ms,cpu_usage_percent,memory_usage_mb,memory_usage_percent,disk_read_mb,disk_write_mb,network_in_mb,network_out_mb,result_rows,result_size_mb,failed,memory_limit,cpu_limit,tag
+/* TOP 1000 ROWS */ SELECT * FROM data LIMIT 1000,"-- TOP 1000 ROWS
+SELECT * FROM data LIMIT 1000",MySQLHandler,57.63578414916992,7.8056224899598385,3544.8984375,22.113062705019296,0.0,0.0,0.01081085205078125,2.2875003814697266,1000,3.920193672180176,False,32G,10,8.0
+/* COUNT ALL */ SELECT COUNT(*) FROM data,"-- COUNT ALL
+SELECT COUNT(*) FROM data",MySQLHandler,474.7920036315918,3.4827172827172825,3554.93359375,22.175661970787658,0.0,0.0,0.00148773193359375,0.0018167495727539062,1,0.000133514404296875,False,32G,10,8.0
+"/* DISTINCT VALUES & COUNT OF 'genre' */ SELECT DISTINCT genre, COUNT(genre) AS genre_count FROM data GROUP BY genre ORDER BY CASE WHEN genre_count IS NULL THEN 1 ELSE 0 END DESC, genre_count DESC","-- DISTINCT VALUES & COUNT OF 'genre'
+SELECT
+    DISTINCT genre,
+    COUNT(genre) AS genre_count
+FROM data
+GROUP BY genre
+ORDER BY genre_count DESC",MySQLHandler,2273.3500003814697,1.5177690029615005,3571.52734375,22.279173718932466,0.0,0.0,0.0023469924926757812,0.09203433990478516,3097,0.23495960235595703,False,32G,10,8.0
+"/* DISTINCT VALUES IN COLUMN 'album' */ SELECT DISTINCT album, COUNT(album) AS album_count FROM data GROUP BY album ORDER BY CASE WHEN album_count IS NULL THEN 1 ELSE 0 END DESC, album_count DESC","-- DISTINCT VALUES IN COLUMN 'album'
+SELECT
+    DISTINCT album,
+    COUNT(album) AS album_count
+FROM data
+GROUP BY album
+ORDER BY album_count DESC",MySQLHandler,3578.8779258728027,1.3933933933933933,1893.77734375,11.81337572571531,0.0,0.0,0.018396377563476562,4.039602279663086,151168,11.28181266784668,False,32G,10,8.0
+"/* STATS (AVG, SUM, MIN, MAX) FOR COLUMN 'tempo' */ SELECT AVG(tempo) AS avg_tempo, SUM(tempo) AS sum_tempo, MIN(tempo) AS min_tempo, MAX(tempo) AS max_tempo FROM data","-- STATS (AVG, SUM, MIN, MAX) FOR COLUMN 'tempo'
+SELECT
+    AVG(tempo) AS avg_tempo,
+    SUM(tempo) AS sum_tempo,
+    MIN(tempo) AS min_tempo,
+    MAX(tempo) AS max_tempo
+FROM data",MySQLHandler,972.8901386260986,1.4798792756539236,1894.1328125,11.815593138399203,0.0,0.0,0.0016231536865234375,0.0019350051879882812,1,0.000156402587890625,False,32G,10,8.0
+/* FILTER BY LIKE OPERATOR & 2 CONDITIONS */ SELECT * FROM data WHERE text LIKE '%%love%%' AND tempo < 120,"-- FILTER BY LIKE OPERATOR & 2 CONDITIONS
+SELECT *
+FROM data
+WHERE text LIKE '%%love%%'
+AND tempo < 120",MySQLHandler,7157.526969909668,1.5742742742742744,1881.8203125,11.738787811150516,0.0,0.0,1.0248041152954102,255.69951820373535,119158,433.5639772415161,False,32G,10,8.0
+"/* SELF-JOIN ON 'artist' TO FIND DUPLICATE ARTISTS */ SELECT DISTINCT a1.artist_s AS artists, COUNT(*) AS duplicate_count FROM data AS a1 JOIN data AS a2 ON a1.artist_s = a2.artist_s GROUP BY a1.artist_s","-- SELF-JOIN ON 'artist' TO FIND DUPLICATE ARTISTS
+SELECT
+    DISTINCT a1.artist_s AS artists,
+    COUNT(*) AS duplicate_count
+FROM data AS a1
+JOIN data AS a2
+ON a1.artist_s = a2.artist_s
+GROUP BY a1.artist_s",MySQLHandler,115726.36008262634,1.3296703296703298,1878.06640625,11.715370958521712,0.0,0.0,0.014678955078125,3.4770421981811523,127197,9.554627418518066,False,32G,10,8.0
+"/* WINDOW FUNCTION (LEAD) */ /* find next popular song based on popularity grouped by artists */ SELECT artist_s, song, popularity, LEAD(song, 1) OVER (PARTITION BY artist_s ORDER BY CASE WHEN popularity IS NULL THEN 1 ELSE 0 END DESC, popularity DESC) AS next_most_popular_song, LEAD(popularity, 1) OVER (PARTITION BY artist_s ORDER BY CASE WHEN popularity IS NULL THEN 1 ELSE 0 END DESC, popularity DESC) AS next_song_popularity FROM data ORDER BY CASE WHEN artist_s IS NULL THEN 1 ELSE 0 END, artist_s, CASE WHEN popularity IS NULL THEN 1 ELSE 0 END DESC, popularity DESC","-- WINDOW FUNCTION (LEAD)
+-- find next popular song based on popularity grouped by artists
+SELECT
+    artist_s,
+    song,
+    popularity,
+    lead(song,1) OVER (
+        PARTITION BY artist_s
+        ORDER BY popularity DESC) AS next_most_popular_song,
+    lead(popularity, 1) OVER(
+        PARTITION BY artist_s
+        ORDER BY popularity DESC) AS next_song_popularity
+FROM data
+ORDER BY artist_s, popularity DESC",MySQLHandler,12020.402908325195,2.4978957915831663,2053.31640625,12.808579778853291,0.0,0.0,0.06318187713623047,28.151911735534668,551443,104.40272903442383,False,32G,10,8.0
+"/* WINDOW FUNCTION WITH CTE */ /* top 10 songs by popularity per time_signature */ WITH ranked_songs AS (SELECT artist_s, song, time_signature, popularity, ROW_NUMBER() OVER (PARTITION BY time_signature ORDER BY CASE WHEN popularity IS NULL THEN 1 ELSE 0 END DESC, popularity DESC) AS popularity_rank FROM data WHERE NOT time_signature IS NULL) SELECT * FROM ranked_songs WHERE popularity_rank <= 10 ORDER BY CASE WHEN popularity IS NULL THEN 1 ELSE 0 END DESC, popularity DESC, CASE WHEN popularity_rank IS NULL THEN 1 ELSE 0 END, popularity_rank","-- WINDOW FUNCTION WITH CTE
+-- top 10 songs by popularity per time_signature
+WITH ranked_songs AS (
+  SELECT
+    artist_s,
+    song,
+    time_signature,
+    popularity,
+    ROW_NUMBER() OVER (PARTITION BY time_signature ORDER BY popularity DESC) as popularity_rank
+  FROM data
+  WHERE time_signature IS NOT NULL
+)
+SELECT
+  *
+FROM ranked_songs
+WHERE popularity_rank <= 10
+ORDER BY
+    popularity DESC,
+    popularity_rank",MySQLHandler,8750.191926956177,3.7957957957957955,2169.546875,13.533624992141588,0.0,0.0,0.00191497802734375,0.0036268234252929688,40,0.007498741149902344,False,32G,10,8.0
+"/* DATE MANIPULATION (cross-engine) */ WITH artist_release_years AS (SELECT DISTINCT artist_s, RIGHT(release_date, 4) AS year_4digits /* Take last 4 characters of release_date as year */, RIGHT(release_date, 2) AS year_2digits, RIGHT(release_date, 1) AS year_1digits FROM data) SELECT artist_s, year_4digits, year_2digits, year_1digits FROM artist_release_years ORDER BY CASE WHEN artist_s IS NULL THEN 1 ELSE 0 END, artist_s, CASE WHEN year_4digits IS NULL THEN 1 ELSE 0 END, year_4digits","-- DATE MANIPULATION (cross-engine)
+WITH artist_release_years AS (
+    SELECT DISTINCT
+        artist_s,
+        -- Take last 4 characters of release_date as year
+        RIGHT(release_date, 4) AS year_4digits,
+        RIGHT(release_date, 2) AS year_2digits,
+        RIGHT(release_date, 1) AS year_1digits
+    FROM data
+)
+SELECT
+    artist_s,
+    year_4digits,
+    year_2digits,
+    year_1digits
+FROM artist_release_years
+ORDER BY artist_s, year_4digits",MySQLHandler,3372.23219871521,2.305876494023904,1993.234375,12.43378830093068,0.0,0.0,0.027375221252441406,6.199315071105957,196008,41.38332653045654,False,32G,10,8.0
+"/* WINDOW FUNCTION WITH CTE, STRING DATE MANIPULATION (cross-engine) */ WITH artist_release_years AS (SELECT DISTINCT artist_s, RIGHT(release_date, 4) AS release_year_str FROM data), artist_release_gaps AS (SELECT artist_s, release_year_str AS release_year, LAG(release_year_str, 1) OVER (PARTITION BY artist_s ORDER BY CASE WHEN release_year_str IS NULL THEN 1 ELSE 0 END, release_year_str) AS previous_release_year FROM artist_release_years) SELECT artist_s, previous_release_year, release_year FROM artist_release_gaps ORDER BY CASE WHEN artist_s IS NULL THEN 1 ELSE 0 END, artist_s, CASE WHEN release_year IS NULL THEN 1 ELSE 0 END, release_year","-- WINDOW FUNCTION WITH CTE, STRING DATE MANIPULATION (cross-engine)
+WITH artist_release_years AS (
+    SELECT DISTINCT
+        artist_s,
+        RIGHT(release_date, 4) AS release_year_str
+    FROM data
+),
+
+artist_release_gaps AS (
+    SELECT
+        artist_s,
+        release_year_str AS release_year,
+        lag(release_year_str, 1) OVER (
+            PARTITION BY artist_s
+            ORDER BY release_year_str
+        ) AS previous_release_year
+    FROM artist_release_years
+)
+
+SELECT
+    artist_s,
+    previous_release_year,
+    release_year
+FROM artist_release_gaps
+ORDER BY artist_s, release_year",MySQLHandler,3859.518051147461,2.6970178926441353,2005.76953125,12.511982557003346,0.0,0.0,0.025316238403320312,5.711871147155762,196008,28.892961502075195,False,32G,10,8.0
